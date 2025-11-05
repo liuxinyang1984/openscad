@@ -1,6 +1,6 @@
-use <config.scad>
-use <lib/tee.scad>
-use <tee3d.scad>
+include <config.scad>
+include <lib/tee.scad>
+include <lib/tee3d.scad>
 
 params = get_pipe_params("DN15");
 

@@ -28,7 +28,7 @@ module tee3d(params, thread_t = undef) {
                     translate([0, 0, -center_len])
                         cylinder(d = outer_d, h = center_len, $fn = 96);
                     // 外螺纹
-                    translate([0, 0, center_len])
+                    translate([0, 0, -center_len - thread_l])
                         cylinder(d = outer_d + 2 * thread_t, h = thread_l, $fn = 96);
                 }
 
@@ -37,7 +37,7 @@ module tee3d(params, thread_t = undef) {
                 union() {
                     translate([0, 0, -center_len])
                         cylinder(d = outer_d, h = center_len, $fn = 96);
-                    translate([0, 0, center_len])
+                    translate([0, 0, -center_len - thread_l])
                         cylinder(d = outer_d + 2 * thread_t, h = thread_l, $fn = 96);
                 }
 
@@ -45,7 +45,7 @@ module tee3d(params, thread_t = undef) {
             union() {
                 translate([0, 0, -center_len])
                     cylinder(d = outer_d, h = center_len, $fn = 96);
-                translate([0, 0, center_len])
+                translate([0, 0, -center_len - thread_l])
                     cylinder(d = outer_d + 2 * thread_t, h = thread_l, $fn = 96);
             }
         }
