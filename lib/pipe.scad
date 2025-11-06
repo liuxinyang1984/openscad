@@ -10,9 +10,9 @@ module pipe(params, len=100) {
     echo(str("[pipe] ", name, " 外径=", outer_d, " 内径=", inner_d, " 长=", length));
 
     difference() {
-        cylinder(d = outer_d, h = length, );
+        cylinder(d = outer_d, h = length);
         translate([0, 0, -1])
-            cylinder(d = inner_d, h = length + 2, );
+            cylinder(d = inner_d, h = length + 2);
     }
 }
 

@@ -26,47 +26,47 @@ module tee3d(params, thread_t = undef) {
                 union() {
                     // 主体
                     translate([0, 0, -center_len])
-                        cylinder(d = outer_d, h = center_len, );
+                        cylinder(d = outer_d, h = center_len);
                     // 外螺纹
                     translate([0, 0, -center_len - thread_l])
-                        cylinder(d = outer_d + 2 * thread_t, h = thread_l, );
+                        cylinder(d = outer_d + 2 * thread_t, h = thread_l);
                 }
 
             // === Y轴通道 ===
             rotate([-90, 0, 0])
                 union() {
                     translate([0, 0, -center_len])
-                        cylinder(d = outer_d, h = center_len, );
+                        cylinder(d = outer_d, h = center_len);
                     translate([0, 0, -center_len - thread_l])
-                        cylinder(d = outer_d + 2 * thread_t, h = thread_l, );
+                        cylinder(d = outer_d + 2 * thread_t, h = thread_l);
                 }
 
             // === Z轴通道 ===
             union() {
                 translate([0, 0, -center_len])
-                    cylinder(d = outer_d, h = center_len, );
+                    cylinder(d = outer_d, h = center_len);
                 translate([0, 0, -center_len - thread_l])
-                    cylinder(d = outer_d + 2 * thread_t, h = thread_l, );
+                    cylinder(d = outer_d + 2 * thread_t, h = thread_l);
             }
             // 内腔球体，居中在 tee 中心
             translate([0,0,0])
-                sphere(d = outer_d, );
+                sphere(d = outer_d);
         }
 
         // === 内腔：三轴贯通 ===
         // X轴内腔
         rotate([0, 90, 0])
             translate([0, 0, -center_len - thread_l - 0.5])
-                cylinder(d = inner_d, h = center_len + thread_l + 1, );
+                cylinder(d = inner_d, h = center_len + thread_l + 1);
 
         // Y轴内腔
         rotate([-90, 0, 0])
             translate([0, 0, -center_len - thread_l - 0.5])
-                cylinder(d = inner_d, h = center_len + thread_l + 1, );
+                cylinder(d = inner_d, h = center_len + thread_l + 1);
 
         // Z轴内腔
         translate([0, 0, -center_len - thread_l - 0.5])
-            cylinder(d = inner_d, h = center_len + thread_l + 1, );
+            cylinder(d = inner_d, h = center_len + thread_l + 1);
     }
 }
 
