@@ -1,10 +1,5 @@
 include <config.scad>
-include <lib/pipe.scad>
-include <lib/tee.scad>
-include <lib/tee3d.scad>
-include <lib/fourway3d.scad>
-include <lib/fiveway3d.scad>
-include <lib/flange3.scad>
+include <utils.scad>
 
 standard = "DN15";
 // 获取参数
@@ -23,8 +18,6 @@ frame_length = table_length - 50 *2;
 frame_height = table_height;
 storage_width = 400;
 
-// 管偏移量
-pipe_offset = pipe_params[3] / 2 ;
 // 计算长度
 vertical_pipe_all           = frame_height - pipe_params[4] * 4 - flange_params[4]; 
 vertical_pipe_left_all      = frame_height - pipe_params[4] * 1.5 - flange_params[4]; 
@@ -59,6 +52,7 @@ module left_frame(){
             pipe(pipe_params,horizontal_pipe_left);
         }
     }
+    // 前腿
     union() {
         translate([0,0,frame_height - pipe_params[4] * 2])
             rotate([0,0,180])
@@ -86,6 +80,7 @@ module left_frame(){
         }
     }
 
+    // 后腿
     translate([0,depth_pipe_all,0]){
         rotate([0,0,90]){
             union() {
@@ -318,16 +313,13 @@ module complete_table(){
     //        test();
     //    }
     //}
-    //color([0.6, 0.0, 0.0, 0.5])  // 深红 + 半透明
-    //left_frame();
+    left_frame();
     //color([0,0.6,0,0.5])
-    //translate([horizontal_pipe_all,0,0]){
-    //    right_frame();
-    //}
-
-    fiveway3d(params);
+    translate([horizontal_pipe_all,0,0]){
+        right_frame();
+    }
 }
-$fn = 160;
+$fn = 12;
 complete_table();
 
 
