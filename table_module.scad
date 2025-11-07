@@ -1,6 +1,5 @@
 include <config.scad>
 include <utils.scad>
-
 standard = "DN15";
 // 获取参数
 flange_params = get_threaded_flange_params(standard);
@@ -21,34 +20,71 @@ storage_width = 400;
 pipe = pipe_params[1];
 halfPipe = pipe_params[1]/2;
 flangeHeight = flange_params[4];
+threadLenght = pipe_params[3]/2;
 
-module vertical_pipe_main_front(){
-    pipeHeight = frame_height - flangeHeight *2; 
+
+module vertical_pipe_left_front(){
+    pipeHeight = frame_height - flangeHeight * 2 - threadLenght; 
     verticalPipeLeftBottom = pipeHeight/3*2 - pipe;
     verticalPipeLeftTop = pipeHeight/3 - pipe;
     union() {
-        threaded_flange(flange_params);
-        translate([0,0,flangeHeight + pipeHeight]){
-            fourway3d(pipe_params);
+        translate([0,0,frame_height]){
+            rotate([0,180,0]){
+                threaded_flange(flange_params);
+            }
         }
-        translate([20,0,flangeHeight + verticalPipeLeftBottom + pipe]){
+        translate([0,0,pipeHeight]){
+            rotate([0,0,180]){
+                fourway3d(pipe_params);
+            }
+        }
+        translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
             pipe(pipe_params, verticalPipeLeftTop);
         }
         translate([0,0,flangeHeight + verticalPipeLeftBottom + halfPipe]){
             tee(pipe_params);
         }
-        translate([20,0,flangeHeight]){
+        translate([0,0,flangeHeight]){
+            pipe(pipe_params, verticalPipeLeftBottom);
+        }
+        threaded_flange(flange_params);
+    }
+}
+module vertical_pipe_right_front(){
+    pipeHeight = frame_height - flangeHeight * 2 - threadLenght; 
+    verticalPipeLeftBottom = pipeHeight/3*2 - pipe;
+    verticalPipeLeftTop = pipeHeight/3 - pipe;
+    union() {
+        translate([50,0,frame_height]){
+            rotate([0,180,0]){
+                threaded_flange(flange_params);
+            }
+        }
+        translate([0,0,pipeHeight + 50]){
+            pipe_link(pipe_params);
+        }
+        translate([0,0,pipeHeight]){
+            rotate([0,0,180]){
+                fourway3d(pipe_params);
+            }
+        }
+        translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
+            pipe(pipe_params, verticalPipeLeftTop);
+        }
+        translate([0,0,flangeHeight + verticalPipeLeftBottom + halfPipe]){
+            tee(pipe_params);
+        }
+        translate([0,0,flangeHeight]){
             pipe(pipe_params, verticalPipeLeftBottom);
         }
         threaded_flange(flange_params);
     }
 }
 module test(){
-        translate([0,0,frame_height - pipe_params[4] * 2])
-            rotate([0,0,180])
-                fourway3d(pipe_params);
-        translate([0,0,vertical_pipe_left_bottom + flange_params[4] + pipe_params[4]])
-            pipe(pipe_params, vertical_pipe_left_top);
+    translate([20,20,0]){
+        cube([5,5,frame_height]);
+    }
 }
 
-vertical_pipe_main_front();
+test();
+vertical_pipe_right_front();

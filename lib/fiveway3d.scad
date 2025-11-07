@@ -2,7 +2,7 @@
 // 模块：立体五通（X/Y/Z 双向 + X 额外接口）
 // 参数结构：[标准名, outer_d, inner_d, thread_len, tee_center_len]
 
-module fiveway3d(params, thread_t = undef,) {
+module fiveway3d(params, thread_t = undef) {
     dn_name      = params[0];
     outer_d      = params[1];
     inner_d      = params[2];
@@ -12,79 +12,86 @@ module fiveway3d(params, thread_t = undef,) {
     thread_t  = is_undef(thread_t) ? (outer_d * 0.1) : thread_t;
     name = str("Fiveway3D_", dn_name);
 
+    // 实际螺纹长度（内部计算）
+    thread_len_actual = thread_l * 0.6;
+
     echo(str("[fiveway3d] 渲染标准件: ", name,
         " 外径=", outer_d,
         " 内径=", inner_d,
         " 螺纹长=", thread_l,
+        " 实际螺纹长=", thread_len_actual,
         " 中心距=", center_len,
         " 螺纹厚=", thread_t));
 
     difference() {
         union() {
-            // === 原 X/Y 轴通道 ===
-            rotate([0, 90, 0])
-                union() {
-                    translate([0, 0, -center_len])
-                        cylinder(d = outer_d, h = center_len);
-                    translate([0, 0, -center_len - thread_l])
-                        cylinder(d = outer_d + 2 * thread_t, h = thread_l);
-                }
-
-            rotate([-90, 0, 0])
-                union() {
-                    translate([0, 0, -center_len])
-                        cylinder(d = outer_d, h = center_len);
-                    translate([0, 0, -center_len - thread_l])
-                        cylinder(d = outer_d + 2 * thread_t, h = thread_l);
-                }
-
-            // === Z轴上下通道 ===
+            color("silver", 0.8)  // === 接头主结构加颜色 ===
             union() {
-                // 向下
-                translate([0, 0, -center_len])
-                    cylinder(d = outer_d, h = center_len);
-                translate([0, 0, -center_len - thread_l])
-                    cylinder(d = outer_d + 2 * thread_t, h = thread_l);
-                // 向上
-                translate([0, 0, 0])
-                    cylinder(d = outer_d, h = center_len);
-                translate([0, 0, center_len])
-                    cylinder(d = outer_d + 2 * thread_t, h = thread_l);
-            }
+                // === 原 X/Y 轴通道 ===
+                rotate([0, 90, 0])
+                    union() {
+                        translate([0, 0, -center_len])
+                            cylinder(d = outer_d, h = center_len);
+                        translate([0, 0, -center_len - thread_len_actual])
+                            cylinder(d = outer_d + 2 * thread_t, h = thread_len_actual);
+                    }
 
-            // === 新增 X 轴接口（负方向） ===
-            rotate([0,90,0])
+                rotate([-90, 0, 0])
+                    union() {
+                        translate([0, 0, -center_len])
+                            cylinder(d = outer_d, h = center_len);
+                        translate([0, 0, -center_len - thread_len_actual])
+                            cylinder(d = outer_d + 2 * thread_t, h = thread_len_actual);
+                    }
+
+                // === Z轴上下通道 ===
                 union() {
-                    translate([0,0,0])
+                    // 向下
+                    translate([0, 0, -center_len])
                         cylinder(d = outer_d, h = center_len);
-                    translate([0,0,center_len])
-                        cylinder(d = outer_d + 2 * thread_t, h = thread_l);
+                    translate([0, 0, -center_len - thread_len_actual])
+                        cylinder(d = outer_d + 2 * thread_t, h = thread_len_actual);
+                    // 向上
+                    translate([0, 0, 0])
+                        cylinder(d = outer_d, h = center_len);
+                    translate([0, 0, center_len])
+                        cylinder(d = outer_d + 2 * thread_t, h = thread_len_actual);
                 }
 
-            // 内外交汇球体
-            translate([0,0,0])
-                sphere(d = outer_d);
+                // === 新增 X 轴接口（负方向） ===
+                rotate([0, 90, 0])
+                    union() {
+                        translate([0, 0, 0])
+                            cylinder(d = outer_d, h = center_len);
+                        translate([0, 0, center_len])
+                            cylinder(d = outer_d + 2 * thread_t, h = thread_len_actual);
+                    }
+
+                // 内外交汇球体
+                translate([0, 0, 0])
+                    sphere(d = outer_d);
+            }
         }
 
         // === 内腔差集 ===
         // X轴内腔
         rotate([0, 90, 0])
-            translate([0,0,-center_len - thread_l - 0.5])
-                cylinder(d = inner_d, h = center_len + thread_l + 1);
+            translate([0, 0, -center_len - thread_len_actual - 0.5])
+                cylinder(d = inner_d, h = center_len + thread_len_actual + 1);
 
         // Y轴内腔
-        rotate([-90,0,0])
-            translate([0,0,-center_len - thread_l - 0.5])
-                cylinder(d = inner_d, h = center_len + thread_l + 1);
+        rotate([-90, 0, 0])
+            translate([0, 0, -center_len - thread_len_actual - 0.5])
+                cylinder(d = inner_d, h = center_len + thread_len_actual + 1);
 
         // Z轴内腔上下贯通
-        translate([0,0,-center_len - thread_l - 0.5])
-            cylinder(d = inner_d, h = 2 * center_len + thread_l*2 + 1);
+        translate([0, 0, -center_len - thread_len_actual - 0.5])
+            cylinder(d = inner_d, h = 2 * center_len + thread_len_actual * 2 + 1);
 
         // 新增 X 轴接口内腔
-        rotate([0,90,0])
-            translate([0,0,0])
-                cylinder(d = inner_d, h = center_len + thread_l + 1);
+        rotate([0, 90, 0])
+            translate([0, 0, 0])
+                cylinder(d = inner_d, h = center_len + thread_len_actual + 1);
     }
 }
 
