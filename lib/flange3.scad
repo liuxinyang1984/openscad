@@ -22,6 +22,7 @@ module threaded_flange(params, thread_thickness = 1.0) {
         " 法兰厚度=", flange_thickness,
         " 螺纹接口直径=", thread_od));
 
+color([0.6, 0, 0, 1])
     difference() {
         union() {
             // === 法兰盘主体 ===

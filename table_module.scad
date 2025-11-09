@@ -8,14 +8,14 @@ pipe_params = get_pipe_params(standard);
 // 实际尺寸
 table_width = 700;
 table_length = 2000;
-table_height = 800; 
+table_height = 750; 
 
 
 // 框架尺寸
 frame_width = table_width - 50 * 2;
 frame_length = table_length - 50 *2;
 frame_height = table_height;
-storage_width = 400;
+storage_length = 400;
 
 pipe = pipe_params[1];
 halfPipe = pipe_params[1]/2;
@@ -24,23 +24,26 @@ threadLenght = pipe_params[3]/2;
 pipeLinkHeight = pipe_params[4]/2;
 
 
-verticalPipeHeight = frame_height - flangeHeight * 2 - threadLenght - pipeLinkHeight; 
+topSetHeight = flangeHeight * 2 + threadLenght + pipeLinkHeight + pipe;
+verticalPipeHeight = frame_height - topSetHeight; 
+verticalPipeTop = verticalPipeHeight/3 ;
+
+depthLength = frame_width - pipe * 2;
 // left
 verticalPipeLeftBottom = verticalPipeHeight/3*2 - pipe;
-verticalPipeLeftTop = verticalPipeHeight/3 - pipe;
 
 // storage
 storageHeight = 50;
-verticalPipeStorageTop = verticalPipeHeight/3 - pipe;
-verticalPipeStorageMiddle = (verticalPipeHeight - storageHeight - verticalPipeStorageTop - pipe)/2 - pipe - halfPipe;
+verticalPipeStorage= verticalPipeHeight - storageHeight - pipe * 2;
+verticalPipeStorageMiddle = (verticalPipeStorage - verticalPipeTop);
 
 // 横向
-horizontalPipeWidth = frame_width - pipe * 4;
+horizontalPipeLength = frame_length - pipe * 4;
 // 左
-horizontalPipeLeftWidth = horizontalPipeWidth / 2;
+horizontalPipeLeftLength = horizontalPipeLength / 2;
 // 右
-horizontalPipeRightWidth = horizontalPipeWidth / 2 - storage_width;
-horizontalPipeStorageWidth = storage_width;
+horizontalPipeRightLength = horizontalPipeLength / 2 - storage_length;
+horizontalPipeStorageLength = storage_length;
 
 module depth_pipe(){
     pipeWidth = frame_width - pipe * 2;
@@ -59,9 +62,9 @@ module left_vertical_bottom(){
     pipe(pipe_params, verticalPipeLeftBottom);
 }
 module left_vertical_top(){
-    pipe(pipe_params, verticalPipeLeftTop);
+    pipe(pipe_params, verticalPipeTop);
 }
-module vertical_pipe_left_front(){
+module top_set(){
     union() {
         translate([0,0,frame_height]){
             rotate([0,180,0]){
@@ -69,18 +72,23 @@ module vertical_pipe_left_front(){
             }
         }
         difference(){
-            translate([0,0,verticalPipeHeight + pipe]){
+            translate([0,0,verticalPipeHeight + pipe * 2]){
                 pipe_link(pipe_params);
             }
             translate([0,0,frame_height]){
                 cylinder(r=50,h=20);
             }
         }
-        translate([0,0,verticalPipeHeight]){
+        translate([0,0,verticalPipeHeight + pipe]){
             rotate([0,0,180]){
                 fourway3d(pipe_params);
             }
         }
+    }
+}
+module vertical_pipe_left_front(){
+        union(){
+            top_set();;
         translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
             left_vertical_top();
         }
@@ -97,26 +105,11 @@ module vertical_pipe_left_front(){
 }
 module vertical_pipe_left_backend(){
     union() {
-        translate([0,0,frame_height]){
-            rotate([0,180,0]){
-                threaded_flange(flange_params);
-            }
-        }
-        difference(){
-            translate([0,0,verticalPipeHeight + pipe]){
-                pipe_link(pipe_params);
-            }
-            translate([0,0,frame_height]){
-                cylinder(r=50,h=20);
-            }
-        }
-        translate([0,0,verticalPipeHeight]){
-            rotate([0,0,90]){
-                fourway3d(pipe_params);
-            }
+        rotate([0,0,-90]){
+            top_set();;
         }
         translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
-            pipe(pipe_params, verticalPipeLeftTop);
+            pipe(pipe_params, verticalPipeTop);
         }
         translate([0,0,flangeHeight + verticalPipeLeftBottom + halfPipe]){
             rotate([0,0,180]){
@@ -144,30 +137,15 @@ module frame_left(){
     }
 }
 
-module vertical_pipe_storage_front(){
+module vertical_pipe_storage_right_front(){
     union(){
-        translate([0,0,frame_height]){
-            rotate([0,180,0]){
-                threaded_flange(flange_params);
-            }
+        rotate([0,0,90]){
+            top_set();
         }
-        difference(){
-            translate([0,0,verticalPipeHeight + pipe]){
-                pipe_link(pipe_params);
-            }
-            translate([0,0,frame_height]){
-                cylinder(r=50,h=20);
-            }
+        translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
+            pipe(pipe_params, verticalPipeTop);
         }
-        translate([20,0,verticalPipeHeight - pipeLinkHeight]){
-            rotate([0,0,90]){
-                fourway3d(pipe_params);
-            }
-        }
-        translate([0,0,flangeHeight + storageHeight + pipe + verticalPipeStorageMiddle + pipe]){
-            pipe(pipe_params, verticalPipeStorageMiddle + verticalPipeStorageTop);
-        }
-        translate([20,0,flangeHeight + storageHeight + pipe + verticalPipeStorageMiddle + halfPipe]){
+        translate([0,0,flangeHeight + storageHeight + pipe + verticalPipeStorageMiddle + halfPipe]){
             rotate([0,0,0]){
                 tee(pipe_params);
             }
@@ -175,7 +153,7 @@ module vertical_pipe_storage_front(){
         translate([0,0,flangeHeight + storageHeight + pipe]){
             pipe(pipe_params, verticalPipeStorageMiddle);
         }
-        translate([20,0,flangeHeight + storageHeight + halfPipe]){
+        translate([0,0,flangeHeight + storageHeight + halfPipe]){
             rotate([0,0,90]){
                 tee(pipe_params);
             }
@@ -185,10 +163,91 @@ module vertical_pipe_storage_front(){
         }
         threaded_flange(flange_params);
     }
+}module vertical_pipe_storage_left_front(){
+    union(){
+        rotate([0,0,0]){
+            top_set();
+        }
+        translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
+            pipe(pipe_params, verticalPipeTop);
+        }
+        translate([0,0,flangeHeight + storageHeight + pipe + verticalPipeStorageMiddle + halfPipe]){
+            rotate([0,0,0]){
+                tee(pipe_params);
+            }
+        }
+        translate([0,0,flangeHeight + storageHeight + pipe]){
+            pipe(pipe_params, verticalPipeStorageMiddle);
+        }
+        translate([0,0,flangeHeight + storageHeight + halfPipe]){
+            rotate([0,0,270]){
+                tee(pipe_params);
+            }
+        }
+        translate([0,0,flangeHeight]){
+            pipe(pipe_params, storageHeight);
+        }
+        threaded_flange(flange_params);
+    }
 }
-module frame_storage(){
+module vertical_pipe_storage_left_backend(){
+    rotate([0,0,180]){
+        vertical_pipe_storage_right_front();
+    }
+}
+module vertical_pipe_storage_right_backend(){
+    rotate([0,0,180]){
+        vertical_pipe_storage_left_front();
+    }
+}
+module horizontal_pipe_storage(){
+    rotate([0,90,0]){
+        pipe(pipe_params,storage_length);
+    }
 }
 
+module frame_storage(){
+    // 左前
+    vertical_pipe_storage_left_front();
+    // 右前
+    translate([storage_length + pipe,0,0]){
+        vertical_pipe_storage_right_front();
+    }
+    // 左后
+    translate([0,depthLength + pipe,0]){
+        vertical_pipe_storage_left_backend();
+    }
+    // 右后
+    translate([storage_length + pipe,depthLength + pipe,0]){
+        vertical_pipe_storage_right_backend();
+    }
+
+    // 前横上
+    translate([halfPipe,0,flangeHeight + storageHeight + halfPipe]){
+        horizontal_pipe_storage();
+    }
+    // 前横下
+    translate([halfPipe,0,frame_height - topSetHeight + pipe]){
+        horizontal_pipe_storage();
+    }
+    // 后横上
+    translate([halfPipe,depthLength + pipe,frame_height - topSetHeight + pipe]){
+        horizontal_pipe_storage();
+    }
+    // 后横下
+    translate([halfPipe,depthLength + pipe,flangeHeight + storageHeight + halfPipe]){
+        horizontal_pipe_storage();
+    }
+
+    // 左纵
+    translate([0,halfPipe,verticalPipeHeight - verticalPipeTop]){
+        depth_pipe();
+    }
+    // 右纵
+    translate([storage_length + pipe,halfPipe,verticalPipeHeight - verticalPipeTop]){
+        depth_pipe();
+    }
+}
 module test(){
     translate([20,20,0]){
         cube([5,5,frame_height]);
@@ -202,5 +261,4 @@ module test(){
 
 test();
 //depth_pipe();
-//frame_left();
-vertical_pipe_storage_front();
+//frame_storage();
