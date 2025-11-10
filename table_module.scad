@@ -26,15 +26,15 @@ pipeLinkHeight = pipe_params[4]/2;
 
 topSetHeight = flangeHeight * 2 + threadLenght + pipeLinkHeight + pipe;
 verticalPipeHeight = frame_height - topSetHeight; 
-verticalPipeTop = verticalPipeHeight/3 ;
+verticalPipeTop = 120 ;
 
 depthLength = frame_width - pipe * 2;
 // left
-verticalPipeLeftBottom = verticalPipeHeight/3*2 - pipe;
+verticalPipeLeftBottom = verticalPipeHeight - verticalPipeTop - pipe;
 
 // storage
-storageHeight = 50;
-verticalPipeStorage= verticalPipeHeight - storageHeight - pipe * 2;
+storageFootHeight = 50;
+verticalPipeStorage= verticalPipeHeight - storageFootHeight - pipe * 2;
 verticalPipeStorageMiddle = (verticalPipeStorage - verticalPipeTop);
 
 // 横向
@@ -128,10 +128,12 @@ module frame_left(){
             vertical_pipe_left_backend();
         }
         vertical_pipe_left_front();
-        translate([0,0,flangeHeight + verticalPipeLeftBottom + halfPipe]){
+        // 上管
+        translate([0,halfPipe,flangeHeight + verticalPipeLeftBottom + halfPipe]){
             depth_pipe();
         }
-        translate([0,0,frame_height - flangeHeight - pipeLinkHeight - pipe_params[4]]){
+        // 下管
+        translate([0,halfPipe,frame_height - flangeHeight - pipeLinkHeight - pipe_params[4]]){
             depth_pipe();
         }
     }
@@ -145,21 +147,21 @@ module vertical_pipe_storage_right_front(){
         translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
             pipe(pipe_params, verticalPipeTop);
         }
-        translate([0,0,flangeHeight + storageHeight + pipe + verticalPipeStorageMiddle + halfPipe]){
+        translate([0,0,flangeHeight + storageFootHeight + pipe + verticalPipeStorageMiddle + halfPipe]){
             rotate([0,0,0]){
                 tee(pipe_params);
             }
         }
-        translate([0,0,flangeHeight + storageHeight + pipe]){
+        translate([0,0,flangeHeight + storageFootHeight + pipe]){
             pipe(pipe_params, verticalPipeStorageMiddle);
         }
-        translate([0,0,flangeHeight + storageHeight + halfPipe]){
+        translate([0,0,flangeHeight + storageFootHeight + halfPipe]){
             rotate([0,0,90]){
                 tee(pipe_params);
             }
         }
         translate([0,0,flangeHeight]){
-            pipe(pipe_params, storageHeight);
+            pipe(pipe_params, storageFootHeight);
         }
         threaded_flange(flange_params);
     }
@@ -171,21 +173,21 @@ module vertical_pipe_storage_right_front(){
         translate([0,0,flangeHeight + verticalPipeLeftBottom + pipe]){
             pipe(pipe_params, verticalPipeTop);
         }
-        translate([0,0,flangeHeight + storageHeight + pipe + verticalPipeStorageMiddle + halfPipe]){
+        translate([0,0,flangeHeight + storageFootHeight + pipe + verticalPipeStorageMiddle + halfPipe]){
             rotate([0,0,0]){
                 tee(pipe_params);
             }
         }
-        translate([0,0,flangeHeight + storageHeight + pipe]){
+        translate([0,0,flangeHeight + storageFootHeight + pipe]){
             pipe(pipe_params, verticalPipeStorageMiddle);
         }
-        translate([0,0,flangeHeight + storageHeight + halfPipe]){
+        translate([0,0,flangeHeight + storageFootHeight + halfPipe]){
             rotate([0,0,270]){
                 tee(pipe_params);
             }
         }
         translate([0,0,flangeHeight]){
-            pipe(pipe_params, storageHeight);
+            pipe(pipe_params, storageFootHeight);
         }
         threaded_flange(flange_params);
     }
@@ -223,7 +225,7 @@ module frame_storage(){
     }
 
     // 前横上
-    translate([halfPipe,0,flangeHeight + storageHeight + halfPipe]){
+    translate([halfPipe,0,flangeHeight + storageFootHeight + halfPipe]){
         horizontal_pipe_storage();
     }
     // 前横下
@@ -235,7 +237,7 @@ module frame_storage(){
         horizontal_pipe_storage();
     }
     // 后横下
-    translate([halfPipe,depthLength + pipe,flangeHeight + storageHeight + halfPipe]){
+    translate([halfPipe,depthLength + pipe,flangeHeight + storageFootHeight + halfPipe]){
         horizontal_pipe_storage();
     }
 
