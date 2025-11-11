@@ -5,28 +5,36 @@ standard = "DN15";
 flange_params = get_threaded_flange_params(standard);
 pipe_params = get_pipe_params(standard);
 
-// 实际尺寸
-table_width = 700;
-table_length = 2000;
-table_height = 750; 
-
-
-// 框架尺寸
-frame_width = table_width - 50 * 2;
-frame_length = table_length - 50 *2;
-frame_height = table_height;
-storage_length = 400;
-
+// 组件尺寸
 pipe = pipe_params[1];
 halfPipe = pipe_params[1]/2;
 flangeHeight = flange_params[4];
 threadLenght = pipe_params[3]/2;
 pipeLinkHeight = pipe_params[4]/2;
 
+// 实际尺寸
+table_width = 700;
+table_length = 2000;
+table_height = 750; 
 
-topSetHeight = flangeHeight * 2 + threadLenght + pipeLinkHeight + pipe;
+
+//框架尺寸
+frameWidth = table_width - 50 * 2;
+frameHeight = table_height;
+frameLength = table_length - 50 *2;
 verticalPipeHeight = frame_height - topSetHeight; 
 verticalPipeTop = 120 ;
+topSetHeight = flangeHeight * 2 + threadLenght + pipeLinkHeight + pipe;
+
+// 柜子尺寸
+storageHeight = 600;
+storageWidth  = 400;
+
+// 
+
+
+
+
 
 depthLength = frame_width - pipe * 2;
 // left
@@ -160,12 +168,14 @@ module vertical_pipe_storage_right_front(){
                 tee(pipe_params);
             }
         }
+
         translate([0,0,flangeHeight]){
             pipe(pipe_params, storageFootHeight);
         }
         threaded_flange(flange_params);
     }
-}module vertical_pipe_storage_left_front(){
+}
+module vertical_pipe_storage_left_front(){
     union(){
         rotate([0,0,0]){
             top_set();
@@ -178,8 +188,19 @@ module vertical_pipe_storage_right_front(){
                 tee(pipe_params);
             }
         }
-        translate([0,0,flangeHeight + storageFootHeight + pipe]){
-            pipe(pipe_params, verticalPipeStorageMiddle);
+
+        translate([20,0,frame_height - topSetHeight + halfPipe]){
+            rotate([180,0,0]){
+                pipe(pipe_params,frame_height - topSetHeight - );
+            }
+        }
+        translate([0,0,flangeHeight + storageFootHeight + pipe + storage_height + halfPipe ]){
+            rotate([0,0,0]){
+                tee(pipe_params);
+            }
+        }
+        translate([20,0,flangeHeight + storageFootHeight + pipe]){
+            pipe(pipe_params, storage_height);
         }
         translate([0,0,flangeHeight + storageFootHeight + halfPipe]){
             rotate([0,0,270]){
