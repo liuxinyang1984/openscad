@@ -8,6 +8,6 @@
 | `pre-redesign/table_module.scad` | 备份参数链（include `pre-redesign/table/`） |
 | `pre-redesign/table/` | 左框 / 右框 / 拉结 |
 
-根目录 **main.scad** 先 include `table/main.scad`，再 `translate([0,1000,0])` 渲染备份作对照；**不**占用根目录 `table/`。
+根目录 **main.scad** 只渲染新项目；需要对照时自行 `use` 本目录 `preview.scad`。
 
 不含 `lib/`、`readme.md`（仍在项目根目录）。

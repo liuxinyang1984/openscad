@@ -16,6 +16,9 @@ flangeThicknessMm = flange_params[4];
 flangeThreadLengthMm = flange_params[6];
 flangeOD = flange_params[1];
 
+assert(frameInset >= flangeOD / 2,
+    str("frameInset=", frameInset, " 须 ≥ 法兰半径 ", flangeOD / 2, "，否则法兰探出桌板"));
+
 couplingTotalMm = 40;
 couplingHexMm = 10;
 
@@ -89,21 +92,21 @@ rfSpanXCutMm = cut_from_net_mm(rfSpanXNetMm, "rfSpanXCutMm");
 rfSpanYCutMm = cut_from_net_mm(rfSpanYNetMm, "rfSpanYCutMm");
 rfStemCutMm = cut_from_net_mm(rfStemNetMm, "rfStemCutMm");
 
-// 右框世界原点：桌面右端内侧 → 右框左前柱（俯视）
-rightFrameOriginX = table_length - frameInset - rightFrameWidth;
+// 右框世界原点：骨架右端内侧 → 右框左前柱（俯视；不随桌板右侧悬出外移）
+rightFrameOriginX = frameSpanLength - frameInset - rightFrameWidth;
 rightFrameOriginY = frameInset;
 
 // =============================================================================
-// 左缘垂挂 / 拉结层派生
+// 垂挂 / 拉结层派生（左右框共用 crossTieZ）
 // =============================================================================
 
-// 顶三通 − 对丝 − 拉结三通：中心距 = 2×拧入余量 + 对丝全长
-crossTieZ = rf_z_top - 2 * fittingHeadExtraMm - couplingTotalMm;
+// 顶管件中心 − 两端外缘搭接 − 垂挂直管净长 → 拉结三通中心
+crossTieZ = rf_z_top - 2 * fittingHeadExtraMm - hangPipeNetMm;
 
-// 对丝中心 Z（两三通之间）
-crossTieCouplingZ = rf_z_top - fittingHeadExtraMm - couplingTotalMm / 2;
+// 垂挂直管起点 Z（拉结三通上缘）
+hangPipeStartZ = crossTieZ + fittingHeadExtraMm;
 
-// 下框上四通 → 拉结三通之间直通净长（左缘柱内）
+// 下框上四通 → 拉结三通之间直通净长（右框左缘柱内）
 rfStemBelowTieNetMm = crossTieZ - rf_z_hi - 2 * fittingHeadExtraMm;
 
 // 左缘深向半跨（前三通↔中位三通、中位↔后三通）
@@ -111,6 +114,7 @@ rfStemBelowTieNetMm = crossTieZ - rf_z_hi - 2 * fittingHeadExtraMm;
 rfEdgeHalfNetMm = pipe_net_between_tees_mm(rightFrameDepth / 2);
 rfEdgeHalfCutMm = cut_from_net_mm(rfEdgeHalfNetMm, "rfEdgeHalfCutMm");
 rfStemBelowTieCutMm = cut_from_net_mm(rfStemBelowTieNetMm, "rfStemBelowTieCutMm");
+hangPipeCutMm = cut_from_net_mm(hangPipeNetMm, "hangPipeCutMm");
 
 // =============================================================================
 // 左框架派生（手填：leftFrameWidth；单层：底四通 → 垂挂/顶，无中间横拉层）
@@ -143,3 +147,33 @@ lfEdgeHalfCutMm = cut_from_net_mm(lfEdgeHalfNetMm, "lfEdgeHalfCutMm");
 // 左框世界原点：桌面左前 inset 内侧
 leftFrameOriginX = frameInset;
 leftFrameOriginY = frameInset;
+
+// =============================================================================
+// 左右框对接横管派生（前/后 @ z_top；中 @ crossTieZ；两端外缘）
+// =============================================================================
+
+// 左框右缘柱心 X、右框左缘柱心 X（世界）
+deskCrossLeftX = leftFrameOriginX + leftFrameWidth;
+deskCrossRightX = rightFrameOriginX;
+
+// 柱心距 − 两端搭接外缘（整根；中位无三通时用）
+deskCrossCenterMm = deskCrossRightX - deskCrossLeftX;
+deskCrossNetMm = pipe_net_between_tees_mm(deskCrossCenterMm);
+deskCrossCutMm = cut_from_net_mm(deskCrossNetMm, "deskCrossCutMm");
+
+// 管子起点：左缘柱心 + 外缘搭接
+deskCrossPipeStartX = deskCrossLeftX + fittingHeadExtraMm;
+
+// Y：前 / 中 / 后（与左右框局部 y=0 / mid / depth 对齐）
+deskCrossYFront = leftFrameOriginY;
+deskCrossYMid = leftFrameOriginY + leftFrameDepth / 2;
+deskCrossYRear = leftFrameOriginY + leftFrameDepth;
+
+// 前/后顶管中点桌面支撑：半跨净长（左柱/右柱 ↔ 中位三通，两端外缘）
+deskCrossMidX = (deskCrossLeftX + deskCrossRightX) / 2;
+deskCrossHalfNetMm = pipe_net_between_tees_mm(deskCrossCenterMm / 2);
+deskCrossHalfCutMm = cut_from_net_mm(deskCrossHalfNetMm, "deskCrossHalfCutMm");
+
+// 中位三通支口上缘 → 翻法兰承面（frameHeight = 桌面底；与角柱顶托同约定）
+deskCrossBranchStemNetMm = frameHeight - rf_z_top - fittingHeadExtraMm;
+deskCrossBranchStemCutMm = cut_from_net_mm(deskCrossBranchStemNetMm, "deskCrossBranchStemCutMm");

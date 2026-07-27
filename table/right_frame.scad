@@ -37,10 +37,10 @@ module rf_top_flange_coupling() {
     }
 }
 
-// 两三通之间的对丝（管道连接器）
-module rf_tee_coupling() {
-    translate([0, 0, crossTieCouplingZ])
-        pipe_link(pipe_params, couplingTotalMm, couplingHexMm);
+// 垂挂直管：拉结三通上缘 → 顶平面四通下缘（净长 hangPipeNetMm）
+module rf_hang_pipe() {
+    translate([0, 0, hangPipeStartZ])
+        rf_pipe_z(hangPipeNetMm);
 }
 
 // -----------------------------------------------------------------------------
@@ -82,8 +82,8 @@ module rf_corner_post_right(rot_z) {
 }
 
 // -----------------------------------------------------------------------------
-// 左缘立柱：上四通 → 直通 → 拉结三通 − 对丝 − 顶平面四通 → 顶托
-// 顶用平面四通（十字）：±Z（对丝 / 顶法兰）+ ±横通（框内 +X 与对接左框 −X）
+// 左缘立柱：上四通 → 直通 → 拉结三通 − 垂挂直管 − 顶平面四通 → 顶托
+// 顶用平面四通（十字）：±Z（垂挂管 / 顶法兰）+ ±横通（框内 +X 与对接左框 −X）
 // top_rot_z=90：横通从局部 ±Y 转到世界 ±X
 // -----------------------------------------------------------------------------
 
@@ -116,7 +116,7 @@ module rf_corner_post_left(rot_z, hang_tee_rot_z = 0, top_rot_z = 90) {
             rotate([0, 0, hang_tee_rot_z])
                 tee(pipe_params);
 
-        rf_tee_coupling();
+        rf_hang_pipe();
 
         translate([0, 0, rf_z_top])
             rotate([0, 0, top_rot_z])
@@ -200,6 +200,8 @@ module table_right_frame() {
         "右缘上衔接搭接异常");
     assert(rfStemBelowTieNetMm > 0 && abs(rfStemBelowTieNetMm - (crossTieZ - rf_z_hi - 2 * e)) < 0.01,
         "左缘垂挂竖管搭接异常");
+    assert(hangPipeNetMm > 0 && abs(hangPipeNetMm - (rf_z_top - crossTieZ - 2 * e)) < 0.01,
+        "垂挂连接管搭接异常");
     assert(rfSpanXNetMm > 0 && abs(rfSpanXNetMm - (rightFrameWidth - 2 * e)) < 0.01,
         "X横拉搭接异常");
     assert(rfSpanYNetMm > 0 && abs(rfSpanYNetMm - (rightFrameDepth - 2 * e)) < 0.01,
