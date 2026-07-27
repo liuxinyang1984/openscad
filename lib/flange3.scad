@@ -50,11 +50,12 @@ color([0.6, 0, 0, 1])
                     d2 = thread_od + 4, 
                     h = 1);
                     
-        // === 内螺纹表示（在孔内壁上做凹槽）===
-        for(i = [0:thread_length/2-1]) {
+        // === 内螺纹表示（在孔内壁上做凹槽；须为 3D，避免与 difference 混用 2D circle 导致预览异常）===
+        for (i = [0 : floor(thread_length / 2) - 1]) {
             translate([0, 0, i * 2])
-                translate([thread_od/2 - thread_thickness/2, 0, 0])
-                    circle(d = thread_thickness, $fn = 16);
+                translate([thread_od / 2 - thread_thickness / 2, 0, 0])
+                    linear_extrude(thread_od, center = true)
+                        circle(d = thread_thickness, $fn = 16);
         }
     }
 }
