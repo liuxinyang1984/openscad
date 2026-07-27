@@ -22,26 +22,23 @@ module tabletop_outline_profile(w, d, r) {
     }
 }
 
-module table_tabletop() {
-    eps = 0.2;
+// 桌板俯视 2D（含右后开洞；过切到板外）
+module tabletop_2d() {
     oc = tabletopCutoutOvercutMm;
     r = tabletopCornerR;
-    color([0.72, 0.55, 0.32, 0.55])
-        difference() {
-            translate([0, 0, frameHeight])
-                linear_extrude(height = tabletopThickness)
-                    tabletop_outline_profile(table_length, table_width, r);
+    difference() {
+        tabletop_outline_profile(table_length, table_width, r);
+        translate([
+            table_length - tabletopCutoutX,
+            table_width - tabletopCutoutY
+        ])
+            square([tabletopCutoutX + oc, tabletopCutoutY + oc]);
+    }
+}
 
-            // 右后内角对齐洞口；+X/+Y 方向再切出板外，外缘无残边
-            translate([
-                table_length - tabletopCutoutX,
-                table_width - tabletopCutoutY,
-                frameHeight - eps
-            ])
-                cube([
-                    tabletopCutoutX + oc,
-                    tabletopCutoutY + oc,
-                    tabletopThickness + 2 * eps
-                ]);
-        }
+module table_tabletop() {
+    color([0.72, 0.55, 0.32, 0.55])
+        translate([0, 0, frameHeight])
+            linear_extrude(height = tabletopThickness)
+                tabletop_2d();
 }

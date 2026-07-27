@@ -9,10 +9,13 @@
 | `desk_cross.scad` | 左右对接横管（前/后顶层中点托桌 + 中垂挂层） |
 | `tabletop.scad` | 桌面板（`tabletopThickness`，半透明） |
 | `shelves.scad` | 框上层板（左下框 + 右下/中框，厚 `shelfThicknessMm`） |
+| `panel_plans.scad` | **桌板/层板 2D 下料平面图**（尺寸标注；可 Export SVG/DXF） |
 | `reference_lines.scad` | Z 参考线；`referenceLinesEnabled` |
 | `main.scad` | `main()` 总装入口 |
 
 根目录 `main.scad` 只负责渲染；旧设计快照仍在 `reference/pre-redesign/`（默认不渲染）。
+
+面板下料：直接打开 `table/panel_plans.scad`，Preview 后可 Export SVG/DXF。
 
 ## `table_config.scad` 约定
 
