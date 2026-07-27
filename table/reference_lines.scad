@@ -12,14 +12,14 @@ module ref_z_bar(z0, z1, col, r = 1.2) {
     if (z1 > z0)
         color(col)
             translate([0, 0, z0])
-                cylinder(r = r, h = z1 - z0, $fn = 16);
+                cylinder(r = r, h = z1 - z0);
 }
 
 module ref_z_tick(z, col, len = 28, r = 0.8) {
     color(col)
         translate([0, 0, z])
             rotate([0, 90, 0])
-                cylinder(r = r, h = len, $fn = 12);
+                cylinder(r = r, h = len);
 }
 
 module table_reference_lines() {

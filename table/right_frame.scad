@@ -82,10 +82,12 @@ module rf_corner_post_right(rot_z) {
 }
 
 // -----------------------------------------------------------------------------
-// 左缘立柱：上四通 → 直通 → 拉结三通 − 对丝 − 顶三通 → 顶托
+// 左缘立柱：上四通 → 直通 → 拉结三通 − 对丝 − 顶平面四通 → 顶托
+// 顶用平面四通（十字）：±Z（对丝 / 顶法兰）+ ±横通（框内 +X 与对接左框 −X）
+// top_rot_z=90：横通从局部 ±Y 转到世界 ±X
 // -----------------------------------------------------------------------------
 
-module rf_corner_post_left(rot_z, tee_toward_plus_x = true, hang_tee_rot_z = 0) {
+module rf_corner_post_left(rot_z, hang_tee_rot_z = 0, top_rot_z = 90) {
     mid_z = rf_z_lo + fittingHeadExtraMm;
     stem_below_z = rf_z_hi + fittingHeadExtraMm;
 
@@ -117,8 +119,8 @@ module rf_corner_post_left(rot_z, tee_toward_plus_x = true, hang_tee_rot_z = 0) 
         rf_tee_coupling();
 
         translate([0, 0, rf_z_top])
-            rotate([0, 0, tee_toward_plus_x ? -90 : 90])
-                tee(pipe_params);
+            rotate([0, 0, top_rot_z])
+                fourway(pipe_params);
 
         rf_top_flange_coupling();
     }
@@ -174,12 +176,12 @@ module table_right_frame() {
     frame_w = rightFrameWidth;
     frame_d = rightFrameDepth;
 
-    rf_corner_post_left(180, true, 0);
+    rf_corner_post_left(180, 0, 90);
     translate([frame_w, 0, 0])
         rf_corner_post_right(-90);
     translate([0, frame_d, 0])
         rotate([0, 0, 180])
-            rf_corner_post_left(-90, false, 0);
+            rf_corner_post_left(-90, 0, 90);
     translate([frame_w, frame_d, 0])
         rotate([0, 0, 180])
             rf_corner_post_right(180);

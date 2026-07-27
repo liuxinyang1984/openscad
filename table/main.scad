@@ -4,9 +4,11 @@ include <table_config.scad>
 include <standards.scad>
 include <reference_lines.scad>
 include <right_frame.scad>
+include <left_frame.scad>
 
 showBottomFlangePreview = false;
 showRightFrame = true;
+showLeftFrame = true;
 
 module main() {
     if (showBottomFlangePreview)
@@ -14,8 +16,11 @@ module main() {
 
     table_reference_lines();
 
+    if (showLeftFrame)
+        table_left_frame_in_place();
+
     if (showRightFrame)
         table_right_frame_in_place();
 
-    // TODO: 左框 / 拉结
+    // TODO: 拉结
 }

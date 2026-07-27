@@ -111,3 +111,35 @@ rfStemBelowTieNetMm = crossTieZ - rf_z_hi - 2 * fittingHeadExtraMm;
 rfEdgeHalfNetMm = pipe_net_between_tees_mm(rightFrameDepth / 2);
 rfEdgeHalfCutMm = cut_from_net_mm(rfEdgeHalfNetMm, "rfEdgeHalfCutMm");
 rfStemBelowTieCutMm = cut_from_net_mm(rfStemBelowTieNetMm, "rfStemBelowTieCutMm");
+
+// =============================================================================
+// 左框架派生（手填：leftFrameWidth；单层：底四通 → 垂挂/顶，无中间横拉层）
+// =============================================================================
+
+leftFrameDepth = frameWidth;
+
+lf_z_lo = rf_z_lo;
+lf_z_top = rf_z_top;
+
+lfSpanXNetMm = pipe_net_between_tees_mm(leftFrameWidth);
+lfSpanYNetMm = pipe_net_between_tees_mm(leftFrameDepth);
+
+// 左缘（外侧）立柱：底四通上缘 → 顶四通下缘（单段）
+lfStemStartZ = lf_z_lo + fittingHeadExtraMm;
+lfStemNetMm = lf_z_top - lfStemStartZ - fittingHeadExtraMm;
+
+// 右缘垂挂立柱：底四通上缘 → 拉结三通下缘（标高与右框 crossTieZ 对齐）
+lfStemBelowTieNetMm = crossTieZ - lf_z_lo - 2 * fittingHeadExtraMm;
+
+// 右缘深向半跨（与右框左缘同公式；深向 = frameWidth）
+lfEdgeHalfNetMm = pipe_net_between_tees_mm(leftFrameDepth / 2);
+
+lfSpanXCutMm = cut_from_net_mm(lfSpanXNetMm, "lfSpanXCutMm");
+lfSpanYCutMm = cut_from_net_mm(lfSpanYNetMm, "lfSpanYCutMm");
+lfStemCutMm = cut_from_net_mm(lfStemNetMm, "lfStemCutMm");
+lfStemBelowTieCutMm = cut_from_net_mm(lfStemBelowTieNetMm, "lfStemBelowTieCutMm");
+lfEdgeHalfCutMm = cut_from_net_mm(lfEdgeHalfNetMm, "lfEdgeHalfCutMm");
+
+// 左框世界原点：桌面左前 inset 内侧
+leftFrameOriginX = frameInset;
+leftFrameOriginY = frameInset;
