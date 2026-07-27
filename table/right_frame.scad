@@ -1,10 +1,11 @@
 // table/right_frame.scad — 右框架几何
 //
 // 依赖：table_config.scad + standards.scad
-// 坐标（局部）：原点 = 左前立柱；+X → 右前；+Y → 左后（桌深）
+// 坐标（局部）：原点对齐「未右移的左前网」；实际左柱在 x=rightFrameShiftX
+//   左前/左后/右前立柱右移 rightFrameShiftX；右后立柱不移（躲开开洞立柱）
+//   前缘在原右缘 x=rightFrameWidth 处用平面三通分出右侧纵管
 //
 // 直管起止约定：相对管件中心外偏 fittingHeadExtraMm，净长 = 中心距 − 2×fittingHeadExtraMm
-// （停在搭接外缘，不伸进管件中心）
 
 module rf_pipe_z(length) {
     pipe(pipe_params, length);
@@ -53,7 +54,6 @@ module rf_corner_post_right(rot_z) {
     union() {
         threaded_flange(flange_params);
 
-        // 脚管：法兰盘顶 → 下四通下缘
         translate([0, 0, flangeThicknessMm])
             rf_pipe_z(footPipeNetMm);
 
@@ -61,7 +61,6 @@ module rf_corner_post_right(rot_z) {
             rotate([0, 0, rot_z])
                 fourway3d(pipe_params);
 
-        // 中立管：下四通上缘 → 上四通下缘
         translate([0, 0, mid_z])
             rf_pipe_z(rfMidPipeNetMm);
 
@@ -69,7 +68,6 @@ module rf_corner_post_right(rot_z) {
             rotate([0, 0, rot_z])
                 fourway3d(pipe_params);
 
-        // 上半衔接：上四通上缘 → 顶四通下缘
         translate([0, 0, rfStemStartZ])
             rf_pipe_z(rfStemNetMm);
 
@@ -82,9 +80,7 @@ module rf_corner_post_right(rot_z) {
 }
 
 // -----------------------------------------------------------------------------
-// 左缘立柱：上四通 → 直通 → 拉结三通 − 垂挂直管 − 顶平面四通 → 顶托
-// 顶用平面四通（十字）：±Z（垂挂管 / 顶法兰）+ ±横通（框内 +X 与对接左框 −X）
-// top_rot_z=90：横通从局部 ±Y 转到世界 ±X
+// 左缘立柱：垂挂 + 顶平面四通
 // -----------------------------------------------------------------------------
 
 module rf_corner_post_left(rot_z, hang_tee_rot_z = 0, top_rot_z = 90) {
@@ -108,7 +104,6 @@ module rf_corner_post_left(rot_z, hang_tee_rot_z = 0, top_rot_z = 90) {
             rotate([0, 0, rot_z])
                 fourway3d(pipe_params);
 
-        // 垂挂竖管：上四通上缘 → 拉结三通下缘
         translate([0, 0, stem_below_z])
             rf_pipe_z(rfStemBelowTieNetMm);
 
@@ -127,44 +122,72 @@ module rf_corner_post_left(rot_z, hang_tee_rot_z = 0, top_rot_z = 90) {
 }
 
 // -----------------------------------------------------------------------------
-// XY 横纵拉（两端：柱心 ± fittingHeadExtraMm）
+// 前缘分叉三通：主通 ±X，支口 +Y（接原右缘纵管）
 // -----------------------------------------------------------------------------
 
-module rf_rail_layer(z, skip_left_y = false) {
-    frame_w = rightFrameWidth;
-    frame_d = rightFrameDepth;
+module rf_front_right_tee() {
+    // 主通 ±X、支口沿 Y；相对初值绕 +X 翻 180°
+    rotate([180, 0, 0])
+        rotate([0, 0, 180])
+            rotate([0, -90, 0])
+                tee(pipe_params);
+}
+
+// -----------------------------------------------------------------------------
+// 一层 XY：梯形 — 前缘三通分左右横管 + 右侧纵管；后缘短横管；可选左缘纵管
+// -----------------------------------------------------------------------------
+
+module rf_rail_layer_shifted(z, skip_left_y = false) {
+    sx = rightFrameShiftX;
+    w = rightFrameWidth;
+    d = rightFrameDepth;
     hx = fittingHeadExtraMm;
 
-    translate([hx, 0, z])
-        rf_pipe_x(rfSpanXNetMm);
-    translate([hx, frame_d, z])
-        rf_pipe_x(rfSpanXNetMm);
+    // 前缘三通 @ 原右缘 x=w（未随右前柱右移）
+    translate([w, 0, z])
+        rf_front_right_tee();
 
+    // 前缘左段：左前柱 → 三通
+    translate([sx + hx, 0, z])
+        rf_pipe_x(rfSpanXFrontLeftNetMm);
+
+    // 前缘右段：三通 → 右前柱
+    translate([w + hx, 0, z])
+        rf_pipe_x(rfSpanXFrontRightNetMm);
+
+    // 后缘：左后柱 → 右后柱（右后不右移，跨距缩短）
+    translate([sx + hx, d, z])
+        rf_pipe_x(rfSpanXRearNetMm);
+
+    // 左侧纵管（顶层跳过，垂挂层另做）
     if (!skip_left_y)
-        translate([0, hx, z])
+        translate([sx, hx, z])
             rf_pipe_y(rfSpanYNetMm);
-    translate([frame_w, hx, z])
+
+    // 右侧纵管：三通 → 右后柱（仍在 x=w）
+    translate([w, hx, z])
         rf_pipe_y(rfSpanYNetMm);
 }
 
 // -----------------------------------------------------------------------------
-// 左缘深向：半跨 + 中位三通（两端扣搭接）
+// 左缘深向垂挂（局部 x = rightFrameShiftX）
 // -----------------------------------------------------------------------------
 
 module rf_left_edge_depth_tie() {
+    sx = rightFrameShiftX;
     y_mid = rightFrameDepth / 2;
     seg = rfEdgeHalfNetMm;
     hx = fittingHeadExtraMm;
 
-    translate([0, hx, crossTieZ])
+    translate([sx, hx, crossTieZ])
         rf_pipe_y(seg);
 
-    translate([0, y_mid, crossTieZ])
+    translate([sx, y_mid, crossTieZ])
         rotate([90, 0, 0])
             rotate([0, 0, 90])
                 tee(pipe_params);
 
-    translate([0, y_mid + hx, crossTieZ])
+    translate([sx, y_mid + hx, crossTieZ])
         rf_pipe_y(seg);
 }
 
@@ -173,26 +196,28 @@ module rf_left_edge_depth_tie() {
 // -----------------------------------------------------------------------------
 
 module table_right_frame() {
-    frame_w = rightFrameWidth;
-    frame_d = rightFrameDepth;
+    sx = rightFrameShiftX;
+    w = rightFrameWidth;
+    d = rightFrameDepth;
 
-    rf_corner_post_left(180, 0, 90);
-    translate([frame_w, 0, 0])
+    // 左前 / 右前（右移）；左后（右移）；右后（不移）
+    translate([sx, 0, 0])
+        rf_corner_post_left(180, 0, 90);
+    translate([w + sx, 0, 0])
         rf_corner_post_right(-90);
-    translate([0, frame_d, 0])
+    translate([sx, d, 0])
         rotate([0, 0, 180])
             rf_corner_post_left(-90, 0, 90);
-    translate([frame_w, frame_d, 0])
+    translate([w, d, 0])
         rotate([0, 0, 180])
             rf_corner_post_right(180);
 
-    rf_rail_layer(rf_z_lo);
-    rf_rail_layer(rf_z_hi);
-    rf_rail_layer(rf_z_top, skip_left_y = true);
+    rf_rail_layer_shifted(rf_z_lo);
+    rf_rail_layer_shifted(rf_z_hi);
+    rf_rail_layer_shifted(rf_z_top, skip_left_y = true);
 
     rf_left_edge_depth_tie();
 
-    // 搭接检查：净长须 > 0，且 = 中心距 − 2×extra
     e = fittingHeadExtraMm;
     assert(rfMidPipeNetMm > 0 && abs(rfMidPipeNetMm - (rf_z_hi - rf_z_lo - 2 * e)) < 0.01,
         "中立管搭接异常");
@@ -202,8 +227,15 @@ module table_right_frame() {
         "左缘垂挂竖管搭接异常");
     assert(hangPipeNetMm > 0 && abs(hangPipeNetMm - (rf_z_top - crossTieZ - 2 * e)) < 0.01,
         "垂挂连接管搭接异常");
-    assert(rfSpanXNetMm > 0 && abs(rfSpanXNetMm - (rightFrameWidth - 2 * e)) < 0.01,
-        "X横拉搭接异常");
+    assert(rfSpanXFrontLeftNetMm > 0
+        && abs(rfSpanXFrontLeftNetMm - (rightFrameWidth - rightFrameShiftX - 2 * e)) < 0.01,
+        "前缘左段横拉搭接异常");
+    assert(rfSpanXFrontRightNetMm > 0
+        && abs(rfSpanXFrontRightNetMm - (rightFrameShiftX - 2 * e)) < 0.01,
+        "前缘右段横拉搭接异常");
+    assert(rfSpanXRearNetMm > 0
+        && abs(rfSpanXRearNetMm - (rightFrameWidth - rightFrameShiftX - 2 * e)) < 0.01,
+        "后缘横拉搭接异常");
     assert(rfSpanYNetMm > 0 && abs(rfSpanYNetMm - (rightFrameDepth - 2 * e)) < 0.01,
         "Y纵拉搭接异常");
     assert(rfEdgeHalfNetMm > 0 && abs(rfEdgeHalfNetMm - (rightFrameDepth / 2 - 2 * e)) < 0.01,
@@ -211,14 +243,11 @@ module table_right_frame() {
     assert(footPipeNetMm > 0, "脚管净长异常");
 
     echo(str(
-        "[右框搭接检查 OK] extra=", e,
-        " 脚管=", footPipeNetMm,
-        " 中立管=", rfMidPipeNetMm,
-        " 右衔接=", rfStemNetMm,
-        " 左垂挂竖=", rfStemBelowTieNetMm,
-        " X横=", rfSpanXNetMm,
-        " Y纵=", rfSpanYNetMm,
-        " 半跨=", rfEdgeHalfNetMm
+        "[右框梯形] shift=", sx,
+        " 前跨=", rightFrameWidth, " 后跨=", rightFrameWidth - sx,
+        " 前左/右段净长=", rfSpanXFrontLeftNetMm, "/", rfSpanXFrontRightNetMm,
+        " 后横=", rfSpanXRearNetMm,
+        " Y纵=", rfSpanYNetMm
     ));
 }
 

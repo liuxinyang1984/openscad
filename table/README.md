@@ -43,7 +43,8 @@
 
 | 参数 | 值 | 含义 |
 |------|-----|------|
-| `rightFrameWidth` | 550 | 右框柱心距 X（机柜 505） |
+| `rightFrameWidth` | 550 | 右框前缘柱心距 X（机柜 505） |
+| `rightFrameShiftX` | 300 | 左柱与右前柱右移；右后柱不移 |
 | `rightBottomFrameHeight` | 350 | 右框底框高（机柜 333） |
 | `leftFrameWidth` | 300 | 左框柱心距 X（中塔机箱；单层无中间横拉） |
 

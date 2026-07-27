@@ -79,6 +79,13 @@ rfMidPipeNetMm = rf_z_hi - rf_z_lo - 2 * fittingHeadExtraMm;
 rfSpanXNetMm = pipe_net_between_tees_mm(rightFrameWidth);
 rfSpanYNetMm = pipe_net_between_tees_mm(rightFrameDepth);
 
+// 梯形右移后各段 X 净长（外缘约定）
+// 前缘：左柱↔三通（长 rightFrameWidth−shift）、三通↔右前柱（长 shift）
+// 后缘：左后柱↔右后柱（长 rightFrameWidth−shift；右后柱不右移）
+rfSpanXFrontLeftNetMm = pipe_net_between_tees_mm(rightFrameWidth - rightFrameShiftX);
+rfSpanXFrontRightNetMm = pipe_net_between_tees_mm(rightFrameShiftX);
+rfSpanXRearNetMm = pipe_net_between_tees_mm(rightFrameWidth - rightFrameShiftX);
+
 // 顶四通中心：桌面底向下 = 法兰盘厚 + 对丝全长 + 拧入余量
 rf_z_top = frameHeight - flangeThicknessMm - couplingTotalMm - fittingHeadExtraMm;
 
@@ -89,10 +96,13 @@ rfStemNetMm = rf_z_top - rfStemStartZ - fittingHeadExtraMm;
 // 建议下料（xx0，供 BOM；模型几何用上面净长以保住标高）
 rfMidPipeCutMm = cut_from_net_mm(rfMidPipeNetMm, "rfMidPipeCutMm");
 rfSpanXCutMm = cut_from_net_mm(rfSpanXNetMm, "rfSpanXCutMm");
+rfSpanXFrontLeftCutMm = cut_from_net_mm(rfSpanXFrontLeftNetMm, "rfSpanXFrontLeftCutMm");
+rfSpanXFrontRightCutMm = cut_from_net_mm(rfSpanXFrontRightNetMm, "rfSpanXFrontRightCutMm");
+rfSpanXRearCutMm = cut_from_net_mm(rfSpanXRearNetMm, "rfSpanXRearCutMm");
 rfSpanYCutMm = cut_from_net_mm(rfSpanYNetMm, "rfSpanYCutMm");
 rfStemCutMm = cut_from_net_mm(rfStemNetMm, "rfStemCutMm");
 
-// 右框世界原点：骨架右端内侧 → 右框左前柱（俯视；不随桌板右侧悬出外移）
+// 右框世界原点：按未右移的右后柱网定位（frameSpanLength）；左柱/右前再局部 +rightFrameShiftX
 rightFrameOriginX = frameSpanLength - frameInset - rightFrameWidth;
 rightFrameOriginY = frameInset;
 
@@ -152,9 +162,9 @@ leftFrameOriginY = frameInset;
 // 左右框对接横管派生（前/后 @ z_top；中 @ crossTieZ；两端外缘）
 // =============================================================================
 
-// 左框右缘柱心 X、右框左缘柱心 X（世界）
+// 左框右缘柱心 X、右框左缘柱心 X（世界；右框左缘已右移）
 deskCrossLeftX = leftFrameOriginX + leftFrameWidth;
-deskCrossRightX = rightFrameOriginX;
+deskCrossRightX = rightFrameOriginX + rightFrameShiftX;
 
 // 柱心距 − 两端搭接外缘（整根；中位无三通时用）
 deskCrossCenterMm = deskCrossRightX - deskCrossLeftX;
