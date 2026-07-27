@@ -8,6 +8,7 @@
 | `left_frame.scad` | 左框架（机箱侧 300 宽；单层 + 右缘垂挂） |
 | `desk_cross.scad` | 左右对接横管（前/后顶层中点托桌 + 中垂挂层） |
 | `tabletop.scad` | 桌面板（`tabletopThickness`，半透明） |
+| `shelves.scad` | 框上层板（左下框 + 右下/中框，厚 `shelfThicknessMm`） |
 | `reference_lines.scad` | Z 参考线；`referenceLinesEnabled` |
 | `main.scad` | `main()` 总装入口 |
 
@@ -38,6 +39,7 @@
 | `frameInset` | 80 | 桌边 → 柱心（法兰外缘到板边约 47） |
 | `footPipeCutMm` | 80 | 脚短管下料（xx0） |
 | `hangPipeNetMm` | 100 | 顶四通外缘 ↔ 拉结三通外缘垂挂净长 |
+| `shelfThicknessMm` | 12 | 框上层板厚 |
 
 ### 右 / 左框架
 

@@ -7,12 +7,14 @@ include <right_frame.scad>
 include <left_frame.scad>
 include <desk_cross.scad>
 include <tabletop.scad>
+include <shelves.scad>
 
 showBottomFlangePreview = false;
 showRightFrame = true;
 showLeftFrame = true;
 showDeskCross = true;
 showTabletop = true;
+showShelves = true;
 showCutoutPillar = true;
 
 module main() {
@@ -32,6 +34,9 @@ module main() {
 
     if (showTabletop)
         table_tabletop();
+
+    if (showShelves)
+        table_shelves();
 
     // -------------------------------------------------------------------------
     // 右后开洞占位柱（写在总装，不单拆文件）
