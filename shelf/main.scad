@@ -18,19 +18,23 @@ include <boards.scad>
 
 // -----------------------------------------------------------------------------
 // 侧框架基准：最右侧组件（各柱共用）
-// 下端堵头 → 立管 → 上前后接头 + 层深管 → 上墙锚
+// 下端堵头 → 立管 → 上前后接头 + 层深管 → 上墙锚；端柱上口：对丝 + 堵头
 // -----------------------------------------------------------------------------
 flangeT   = flangeThicknessMm;      // 法兰盘厚度
 couplingL = couplingTotalMm;        // 对丝全长
 extra     = fittingHeadExtraMm;     // 中心 → 管端外缘
 depthNet  = shelfDepthPipeNetMm;    // 层深直管净长
 vertNet   = shelfVerticalPipeNetMm; // 立管净长
-stubNet   = shelfStubPipeNetMm;     // 端柱短管净长
 
 backLowerFiveZ   = shelfBackFittingLocalZ;
 frontLowerFiveZ  = shelfFrontFittingLocalZ;
 upperFiveY       = shelfUpperFittingLocalY;
 upperDepthStartZ = backLowerFiveZ - extra;
+
+// 上口对丝中心 Y：接头上端口外缘再出半个对丝长（局部 −Y 为上）
+upperCouplingY = upperFiveY - fittingHalfHeadMm - couplingL / 2;
+// 堵头开口平面：对丝外端
+upperCapY = upperFiveY - fittingHalfHeadMm - couplingL;
 
 // 侧框架一柱
 module shelf_side_frame() {
@@ -70,18 +74,18 @@ module shelf_side_frame() {
             pipe_link(pipe_params, couplingL, couplingHexMm);
     }
 
-    // 后上短管 + 堵头
-    translate([0, -extra - vertNet - fittingHalfHeadMm, backLowerFiveZ])
+    // 后上：对丝 + 堵头（取代端柱短管）
+    translate([0, upperCouplingY, backLowerFiveZ])
         rotate([90, 0, 0])
-            pipe(pipe_params, stubNet);
-    translate([0, -extra - vertNet - fittingHalfHeadMm - stubNet, backLowerFiveZ])
+            pipe_link(pipe_params, couplingL, couplingHexMm);
+    translate([0, upperCapY, backLowerFiveZ])
         rotate([90, 0, 0])
             cap(pipe_params);
-    // 前上短管 + 堵头
-    translate([0, -extra - vertNet - fittingHalfHeadMm, frontLowerFiveZ])
+    // 前上：对丝 + 堵头
+    translate([0, upperCouplingY, frontLowerFiveZ])
         rotate([90, 0, 0])
-            pipe(pipe_params, stubNet);
-    translate([0, -extra - vertNet - fittingHalfHeadMm - stubNet, frontLowerFiveZ])
+            pipe_link(pipe_params, couplingL, couplingHexMm);
+    translate([0, upperCapY, frontLowerFiveZ])
         rotate([90, 0, 0])
             cap(pipe_params);
 }

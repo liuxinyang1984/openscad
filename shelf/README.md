@@ -32,7 +32,7 @@
 | `shelfBoardSideMarginMm` | 50 | 左右柱心边距 |
 | `shelfBoardHoleEdgeClearMm` | 20 | 孔边距板边 ≥ |
 | `shelfBoardHoleExtraMm` | 5 | 孔径 = `pipeOD` + 本值 |
-| `shelfStubPipeNetMm` | 50 | 端柱短管净长 |
+| `shelfStubPipeNetMm` | （废弃） | 端柱上口已改对丝+堵头 |
 | `shelfPillarLeftX` | 2270 | 占位立柱左缘 |
 | `shelfBoardPillarGapMm` | 10 | 板右缘 ↔ 立柱 |
 
