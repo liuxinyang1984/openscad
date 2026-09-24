@@ -36,6 +36,9 @@ shelfBoardDepthMm = 280;
 // 层板厚
 shelfThicknessMm = 12;
 
+// 层板外轮廓圆角 R（四角）
+shelfBoardCornerR = 5;
+
 // 板左右相对端柱心外伸（须 ≥ 孔边距 + 孔半径）
 shelfBoardSideMarginMm = 50;
 

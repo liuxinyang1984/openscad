@@ -133,28 +133,44 @@ module rf_front_right_tee() {
 }
 
 // -----------------------------------------------------------------------------
-// 一层 XY：梯形 — 前缘三通分左右横管 + 右侧纵管；后缘短横管；可选左缘纵管
+// 一层 XY：梯形 — 前缘可整根或三通分左右；后缘短横管；可选左右纵管
 // -----------------------------------------------------------------------------
 
-module rf_rail_layer_shifted(z, skip_left_y = false, skip_right_y = false, skip_front_right_x = false, skip_rear_x = false, skip_front_left_x = false) {
+module rf_rail_layer_shifted(
+    z,
+    skip_left_y = false,
+    skip_right_y = false,
+    skip_front_right_x = false,
+    skip_rear_x = false,
+    skip_front_left_x = false,
+    // 前缘整根（左前→右前，无分叉三通）；底圈无右侧纵管时用
+    front_whole_x = false
+) {
     sx = rightFrameShiftX;
     w = rightFrameWidth;
     d = rightFrameDepth;
     hx = fittingHeadExtraMm;
 
-    // 前缘三通 @ 原右缘 x=w（未随右前柱右移）
-    translate([w, 0, z])
-        rf_front_right_tee();
+    if (front_whole_x) {
+        // 前缘整根：左前柱(sx) → 右前柱(w+sx)，柱心距 = rightFrameWidth
+        if (!skip_front_left_x)
+            translate([sx + hx, 0, z])
+                rf_pipe_x(rfSpanXNetMm);
+    } else {
+        // 前缘三通 @ 原右缘 x=w（未随右前柱右移）
+        translate([w, 0, z])
+            rf_front_right_tee();
 
-    // 前缘左段：左前柱 → 三通
-    if (!skip_front_left_x)
-        translate([sx + hx, 0, z])
-            rf_pipe_x(rfSpanXFrontLeftNetMm);
+        // 前缘左段：左前柱 → 三通
+        if (!skip_front_left_x)
+            translate([sx + hx, 0, z])
+                rf_pipe_x(rfSpanXFrontLeftNetMm);
 
-    // 前缘右段：三通 → 右前柱
-    if (!skip_front_right_x)
-        translate([w + hx, 0, z])
-            rf_pipe_x(rfSpanXFrontRightNetMm);
+        // 前缘右段：三通 → 右前柱
+        if (!skip_front_right_x)
+            translate([w + hx, 0, z])
+                rf_pipe_x(rfSpanXFrontRightNetMm);
+    }
 
     // 后缘：左后柱 → 右后柱（右后不右移，跨距缩短）
     if (!skip_rear_x)
@@ -166,7 +182,7 @@ module rf_rail_layer_shifted(z, skip_left_y = false, skip_right_y = false, skip_
         translate([sx, hx, z])
             rf_pipe_y(rfSpanYNetMm);
 
-    // 右侧纵管：三通 → 右后柱（仍在 x=w）
+    // 右侧纵管：三通 → 右后柱（仍在 x=w）；整根前缘时不应开启
     if (!skip_right_y)
         translate([w, hx, z])
             rf_pipe_y(rfSpanYNetMm);
@@ -215,8 +231,13 @@ module table_right_frame() {
         rotate([0, 0, 180])
             rf_corner_post_right(180);
 
-    // 底圈：左右缘纵管均去掉（仅留前后横管开口）
-    rf_rail_layer_shifted(rf_z_lo, skip_left_y = true, skip_right_y = true);
+    // 底圈：前后横管开口；前缘整根（无分叉三通）；左右缘纵管去掉
+    rf_rail_layer_shifted(
+        rf_z_lo,
+        skip_left_y = true,
+        skip_right_y = true,
+        front_whole_x = true
+    );
     // 中圈 / 顶圈：横纵管均去掉（上层板承在 rf_z_hi 立体四通 + 开孔）
     // rf_rail_layer_shifted(rf_z_hi, ...);
     // rf_rail_layer_shifted(rf_z_top, ...);
@@ -234,6 +255,9 @@ module table_right_frame() {
     assert(lfHangToFlangeNetMm > 0
         && abs(lfHangToFlangeNetMm - (frameHeight - flangeThicknessMm - hangPipeStartZ)) < 0.01,
         "左缘垂挂→法兰搭接异常");
+    assert(rfSpanXNetMm > 0
+        && abs(rfSpanXNetMm - (rightFrameWidth - 2 * e)) < 0.01,
+        "底圈前缘整根横拉搭接异常");
     assert(rfSpanXFrontLeftNetMm > 0
         && abs(rfSpanXFrontLeftNetMm - (rightFrameWidth - rightFrameShiftX - 2 * e)) < 0.01,
         "前缘左段横拉搭接异常");
@@ -252,7 +276,7 @@ module table_right_frame() {
     echo(str(
         "[右框梯形] shift=", sx,
         " 前跨=", rightFrameWidth, " 后跨=", rightFrameWidth - sx,
-        " 前左/右段净长=", rfSpanXFrontLeftNetMm, "/", rfSpanXFrontRightNetMm,
+        " 底前整根净长=", rfSpanXNetMm,
         " 后横=", rfSpanXRearNetMm,
         " Y纵=", rfSpanYNetMm
     ));

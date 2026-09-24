@@ -2,9 +2,15 @@
 //
 // 板底压在横管外径顶上；立管孔边距板边 ≥ shelfBoardHoleEdgeClearMm
 
+module shelf_board_rounded_rect_2d(w, d, r = shelfBoardCornerR) {
+    offset(r = r)
+        offset(delta = -r)
+            square([w, d]);
+}
+
 module shelf_board_2d(size_xy, posts) {
     difference() {
-        square(size_xy);
+        shelf_board_rounded_rect_2d(size_xy[0], size_xy[1]);
         for (p = posts)
             translate([p[0], p[1]])
                 circle(d = shelfBoardHoleD);

@@ -108,41 +108,45 @@ module plan_tabletop() {
 }
 
 // -----------------------------------------------------------------------------
-// 左框层板（柱心坐标；外轮廓已含 outset）
+// 左框层板（手填外轮廓；原点 = 板左前角）
 // -----------------------------------------------------------------------------
 module plan_shelf_left() {
+    ow = leftShelfBoardWMm;
+    od = leftShelfBoardDMm;
+    mx = shelf_left_margin_x();
+    my = shelf_left_margin_y();
     w = leftFrameWidth;
     d = leftFrameDepth;
-    o = shelf_outline_outset();
-    ow = shelf_left_outer_w();
-    od = shelf_left_outer_d();
     hole_d = shelf_post_cut_d();
+    r = shelfCornerR;
+    inv = 1 / sqrt(2);
 
     color([0.62, 0.45, 0.28])
-        shelf_board_rect_2d([w, d]);
+        shelf_board_left_2d();
 
-    // 标题在最上；柱心尺寸在标题下、板顶上
-    plan_label([w / 2, d + o + 130],
-        str("左框层板  t=", plan_mm(shelfThicknessMm), "  ×1"),
+    plan_label([ow / 2, od + 130],
+        str("左框层板  t=", plan_mm(shelfThicknessMm), "  ×2（下+上）"),
         size = planTitleSize);
 
-    plan_dim_x(0, w, d + o, str("柱心 ", plan_mm(w)), side = 1, offset = 45);
-    plan_dim_y(0, d, w + o, str("柱心 ", plan_mm(d)), side = 1, offset = 50);
+    // 柱心网
+    plan_dim_x(mx, mx + w, od, str("柱心 ", plan_mm(w)), side = 1, offset = 45);
+    plan_dim_y(my, my + d, ow, str("柱心 ", plan_mm(d)), side = 1, offset = 50);
 
-    // 外轮廓：下边 / 左边
-    plan_dim_x(-o, w + o, -o, plan_mm(ow), side = -1, offset = 55);
-    plan_dim_y(-o, d + o, -o, plan_mm(od), side = -1, offset = 55);
+    // 外轮廓
+    plan_dim_x(0, ow, 0, plan_mm(ow), side = -1, offset = 55);
+    plan_dim_y(0, od, 0, plan_mm(od), side = -1, offset = 55);
 
-    plan_label([w / 2, d / 2 + 30],
-        str("∅", round(hole_d), " ×4（柱心）"),
+    plan_corner_r([0, 0], [-inv, -inv], r);
+    plan_label([ow / 2, od / 2 + 30],
+        str("∅", round(hole_d), " ×4（柱心；边距≥", shelfHoleEdgeClearMm, "）"),
         size = planNoteSize);
-    plan_label([w / 2, -o - 100],
-        str("外延 outset=", round(o), "（管外径/2+", shelfEdgeOverhangMm, "）"),
+    plan_label([ow / 2, -100],
+        str("手填外轮廓 ", ow, "×", od, "  边距 ", round(mx), "×", round(my)),
         size = planNoteSize);
 }
 
 // -----------------------------------------------------------------------------
-// 右框层板（两块同形；柱心坐标）
+// 右框层板（两块同形；柱心坐标；原点 = 已右移左前柱心）
 // -----------------------------------------------------------------------------
 module plan_shelf_right() {
     sx = rightFrameShiftX;
@@ -154,11 +158,12 @@ module plan_shelf_right() {
     cut_x = shelf_rf_cut_x();
     cut_y = shelf_rf_cut_y();
     hole_d = shelf_post_cut_d();
+    r = shelfCornerR;
+    inv = 1 / sqrt(2);
 
     color([0.62, 0.45, 0.28])
         shelf_board_right_2d();
 
-    // 标题最上；其下依次：后柱心、前柱心（拉开间距）
     plan_label([w / 2, d + o + 175],
         str("右框层板  t=", plan_mm(shelfThicknessMm), "  ×2（下框+中框）"),
         size = planTitleSize);
@@ -166,36 +171,34 @@ module plan_shelf_right() {
     plan_dim_x(0, w - sx, d + o, str("后柱心 ", plan_mm(w - sx)), side = 1, offset = 95);
     plan_dim_x(0, w, d + o, str("前柱心 ", plan_mm(w)), side = 1, offset = 45);
 
-    // 外轮廓下边；深向尺寸只放右侧，避免与左边挤在一起
     plan_dim_x(-o, w + o, -o, plan_mm(ow), side = -1, offset = 55);
     plan_dim_y(-o, d + o, w + o, plan_mm(od), side = 1, offset = 55);
     plan_dim_y(0, d, w + o, str("柱心 ", plan_mm(d)), side = 1, offset = 110);
 
-    // 切洞：宽标在缺口底边下方；高标在板右最外侧（躲开外轮廓/柱心深向尺寸）
     plan_dim_x(w - cut_x, w + o, d - cut_y, plan_mm(cut_x), side = -1, offset = 40);
     plan_dim_y(d - cut_y, d + o, w + o, plan_mm(cut_y), side = 1, offset = 165);
 
+    plan_corner_r([-o, -o], [-inv, -inv], r);
     plan_label([w / 2 - 40, d / 2 - 40],
-        str("∅", round(hole_d), " ×4（柱心；右后未右移）"),
+        str("∅", round(hole_d), " ×4  孔位: (0,0)(", w, ",0)(0,", d, ")(", w - sx, ",", d, ")"),
         size = planNoteSize);
-    plan_label([w - cut_x - 120, d - cut_y / 2],
-        str("切 ", cut_x, "×", cut_y, " +过切"),
+    plan_label([w - cut_x - 40, d - cut_y / 2],
+        str("切宽 ", round(cut_x), "（右后柱+", round(o), "起切）×深 ", cut_y, " +过切", tabletopCutoutOvercutMm),
         size = planNoteSize, halign = "right");
 }
 
 module panel_plans() {
     gap = planGapMm;
-    o = shelf_outline_outset();
 
     plan_tabletop();
 
-    // 左框在桌板下方（加大间隙给底部尺寸）
-    y_left = -(table_width + gap + o + 40);
+    // 左框在桌板下方
+    y_left = -(table_width + gap + 80);
     translate([0, y_left])
         plan_shelf_left();
 
-    // 右框在左板右侧（加大间隙给右侧尺寸）
-    x_right = shelf_left_outer_w() + gap + 80;
+    // 右框在左板右侧
+    x_right = leftShelfBoardWMm + gap + 80;
     translate([x_right, y_left])
         plan_shelf_right();
 

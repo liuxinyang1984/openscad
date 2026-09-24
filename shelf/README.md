@@ -9,6 +9,9 @@
 | `standards.scad` | **只放派生**（柱心、板位、管净长/下料） |
 | `main.scad` | `shelf_main()` 侧框架 |
 | `boards.scad` | 层板（底面压在横管顶上） |
+| `panel_plans.scad` | **层板 2D 下料平面图**（尺寸标注；可 Export SVG/DXF） |
+
+面板下料：直接打开 `shelf/panel_plans.scad`，Preview 后可 Export SVG/DXF。
 
 ## 定位逻辑
 

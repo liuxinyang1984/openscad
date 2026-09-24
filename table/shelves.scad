@@ -16,7 +16,9 @@ function shelf_post_cut_d() = shelf_fitting_od() + shelfHoleExtraMm;
 function shelf_board_outset() = shelfHoleEdgeClearMm + shelf_post_cut_d() / 2;
 function shelf_outline_outset() = shelf_board_outset();
 
-function shelf_rf_cut_x() = rightFrameShiftX;
+// 右后切洞：左缘须在右后柱心 + outset 之外，保证孔边距板边 ≥ shelfHoleEdgeClearMm
+// （旧：cut_x = shift → 切边穿过右后柱心，竖管外侧无板缘）
+function shelf_rf_cut_x() = rightFrameShiftX - shelf_board_outset();
 function shelf_rf_cut_y() = tabletopCutoutY - frameInset;
 
 function shelf_left_margin_x() = (leftShelfBoardWMm - leftFrameWidth) / 2;
@@ -70,19 +72,26 @@ module shelf_board_right_2d() {
     cut_x = shelf_rf_cut_x();
     cut_y = shelf_rf_cut_y();
     posts = [
-        [0, 0],
-        [w, 0],
-        [w - sx, d],
-        [0, d]
+        [0, 0],           // 左前（已右移）
+        [w, 0],           // 右前（已右移）
+        [w - sx, d],      // 右后（未右移）
+        [0, d]            // 左后（已右移）
     ];
+    assert(shelf_rf_cut_x() > 0,
+        str("shelf_rf_cut_x=", shelf_rf_cut_x(), " 须 > 0（shift 须 > outset）"));
     assert(cut_y > 0 && cut_y < d,
         str("shelf_rf_cut_y 须在 (0, depth) 内，当前=", cut_y));
     assert(o >= r - 0.01, str("shelf outset 须 ≥ 圆角 R=", r));
+    // 切边在右后柱心右侧 outset 处
+    assert(abs((w - cut_x) - (w - sx + o)) < 0.01,
+        str("右后切边未对齐柱心+outset：切边X=", w - cut_x,
+            " 期望=", w - sx + o));
     difference() {
         // 先外扩再倒圆角（等效外包尺寸不变）
         offset(r = r)
             offset(delta = o - r)
                 square([w, d]);
+        // 右后切：躲开开洞立柱；保留右后竖管外周 outset 板缘
         translate([w - cut_x, d - cut_y])
             square([cut_x + o + oc, cut_y + o + oc]);
         for (p = posts)
@@ -133,7 +142,9 @@ module table_shelves() {
         "[层板] 左柜托板外轮廓=", leftShelfBoardWMm, "×", leftShelfBoardDMm,
         " 边距X/Y=", mx, "/", my,
         " 孔边距板边≥", shelfHoleEdgeClearMm,
-        " 孔径=", shelf_post_cut_d()
+        " 孔径=", shelf_post_cut_d(),
+        " 右后切X/Y=", shelf_rf_cut_x(), "/", shelf_rf_cut_y(),
+        "（切边=右后柱+", shelf_board_outset(), "）"
     ));
 
     // 左框下 / 上：原点改为板左前角
