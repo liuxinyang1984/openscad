@@ -1,8 +1,8 @@
 // table/desk_cross.scad — 左右框架对接横管
 //
 // 依赖：table_config.scad + standards.scad
-// 三根沿 +X：前/后 @ z_top（顶平面四通；中点三通+支口翻法兰顶桌底）
-//            中 @ crossTieZ（垂挂中位三通；整根）
+// 中 @ crossTieZ：左半 + 中点三通（上托桌底法兰）+ 右半
+// 前/后 @ z_top：暂去掉（模块保留）
 // 直管两端停在管件搭接外缘（fittingHeadExtraMm），不到柱心
 
 module desk_cross_pipe_x(length) {
@@ -18,32 +18,32 @@ module desk_cross_support_tee() {
 }
 
 // 支口向上：外缘起短管 + 翻法兰（承面 = frameHeight）
-module desk_cross_branch_flange() {
+module desk_cross_branch_flange(stem_net) {
     translate([0, 0, fittingHeadExtraMm])
         union() {
-            pipe(pipe_params, deskCrossBranchStemNetMm);
-            translate([0, 0, deskCrossBranchStemNetMm])
+            pipe(pipe_params, stem_net);
+            translate([0, 0, stem_net])
                 rotate([0, 180, 0])
                     threaded_flange(flange_params);
         }
 }
 
-module desk_cross_support_at(x, y, z) {
+module desk_cross_support_at(x, y, z, stem_net) {
     translate([x, y, z])
         union() {
             desk_cross_support_tee();
-            desk_cross_branch_flange();
+            desk_cross_branch_flange(stem_net);
         }
 }
 
-// 整根（垂挂层）
+// 整根（无中托）
 module desk_cross_span_whole(y, z) {
     translate([deskCrossPipeStartX, y, z])
         desk_cross_pipe_x(deskCrossNetMm);
 }
 
-// 前/后顶层：左半 + 中点支撑 + 右半（两端外缘）
-module desk_cross_span_supported(y, z) {
+// 左半 + 中点支撑 + 右半
+module desk_cross_span_supported(y, z, stem_net) {
     hx = fittingHeadExtraMm;
     half = deskCrossHalfNetMm;
     x_mid = deskCrossMidX;
@@ -51,28 +51,32 @@ module desk_cross_span_supported(y, z) {
     translate([deskCrossPipeStartX, y, z])
         desk_cross_pipe_x(half);
 
-    desk_cross_support_at(x_mid, y, z);
+    desk_cross_support_at(x_mid, y, z, stem_net);
 
     translate([x_mid + hx, y, z])
         desk_cross_pipe_x(half);
 }
 
 module table_desk_cross() {
-    // 前 / 后：顶平面四通层 + 中点桌面支撑
-    desk_cross_span_supported(deskCrossYFront, rf_z_top);
-    desk_cross_span_supported(deskCrossYRear, rf_z_top);
+    // 前/后顶层暂去掉
+    // desk_cross_span_supported(deskCrossYFront, rf_z_top, deskCrossBranchStemNetMm);
+    // desk_cross_span_supported(deskCrossYRear, rf_z_top, deskCrossBranchStemNetMm);
 
-    // 中：垂挂拉结层（整根）
-    desk_cross_span_whole(deskCrossYMid, crossTieZ);
+    // 中：垂挂拉结 + 中点上托桌底
+    desk_cross_span_supported(
+        deskCrossYMid,
+        crossTieZ,
+        deskCrossMidBranchStemNetMm
+    );
 
     e = fittingHeadExtraMm;
     assert(deskCrossNetMm > 0 && abs(deskCrossNetMm - (deskCrossCenterMm - 2 * e)) < 0.01,
         "对接横管搭接异常");
     assert(deskCrossHalfNetMm > 0 && abs(deskCrossHalfNetMm - (deskCrossCenterMm / 2 - 2 * e)) < 0.01,
         "对接半跨搭接异常");
-    assert(deskCrossBranchStemNetMm > 0
-        && abs(deskCrossBranchStemNetMm - (frameHeight - rf_z_top - e)) < 0.01,
-        "桌面支撑支口搭接异常");
+    assert(deskCrossMidBranchStemNetMm > 0
+        && abs(deskCrossMidBranchStemNetMm - (frameHeight - crossTieZ - e)) < 0.01,
+        "中托支口搭接异常");
     assert(abs(deskCrossPipeStartX + deskCrossHalfNetMm - (deskCrossMidX - e)) < 0.01,
         "对接左半终点异常");
     assert(abs(deskCrossMidX + e + deskCrossHalfNetMm - (deskCrossRightX - e)) < 0.01,
@@ -80,10 +84,10 @@ module table_desk_cross() {
 
     echo(str(
         "[对接] 柱心距=", deskCrossCenterMm,
-        " 整净长=", deskCrossNetMm, " 半净长=", deskCrossHalfNetMm,
-        " 支口=", deskCrossBranchStemNetMm, " 下料≈", deskCrossBranchStemCutMm,
+        " 半净长=", deskCrossHalfNetMm, " 下料≈", deskCrossHalfCutMm,
+        " 中托支口=", deskCrossMidBranchStemNetMm, " 下料≈", deskCrossMidBranchStemCutMm,
         " midX=", deskCrossMidX,
-        " y前/中/后=", deskCrossYFront, "/", deskCrossYMid, "/", deskCrossYRear,
-        " z顶=", rf_z_top, " z垂挂=", crossTieZ
+        " y中=", deskCrossYMid,
+        " z=", crossTieZ
     ));
 }

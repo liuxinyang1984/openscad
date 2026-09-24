@@ -18,21 +18,41 @@ assert(shelfBoardSideMarginMm >= shelfBoardPostInsetMinMm,
     str("shelfBoardSideMarginMm=", shelfBoardSideMarginMm,
         " 须 ≥ 孔边距+孔半径 ", shelfBoardPostInsetMinMm));
 
-// 前后边距：取最小开孔要求（左右用手填边距，已 assert）
-shelfBoardDepthMarginMm = shelfBoardPostInsetMinMm;
+// 前后边距下限：取最小开孔要求（左右用手填边距，已 assert）
+shelfBoardDepthMarginMinMm = shelfBoardPostInsetMinMm;
 
 // =============================================================================
-// 前后框架：板深 → 柱心距 → 层深直管净长
+// 前后框架：板深 → 最大柱心距 → 层深管下料整厘米 → 反推净长/柱心/边距
 // =============================================================================
 
-shelfDepthCentersMm = shelfBoardDepthMm - 2 * shelfBoardDepthMarginMm;
+shelfDepthCentersMaxMm =
+    shelfBoardDepthMm - 2 * shelfBoardDepthMarginMinMm;
 
-assert(shelfDepthCentersMm > 2 * fittingHeadExtraMm,
-    str("板深/边距过紧：柱心距 ", shelfDepthCentersMm,
+assert(shelfDepthCentersMaxMm > 2 * fittingHeadExtraMm,
+    str("板深/边距过紧：柱心距上限 ", shelfDepthCentersMaxMm,
         " 须 > 2×外缘搭接 ", 2 * fittingHeadExtraMm));
 
-shelfDepthPipeNetMm = shelfDepthCentersMm - 2 * fittingHeadExtraMm;
-shelfDepthPipeCutMm = cut_from_net_mm(shelfDepthPipeNetMm, "shelfDepth");
+shelfDepthPipeNetMaxMm =
+    shelfDepthCentersMaxMm - 2 * fittingHeadExtraMm;
+
+// 下料整厘米；若进位后净长超出板深允许，则降一档 10mm
+shelfDepthPipeCutCandidateMm =
+    cut_round_xx0(shelfDepthPipeNetMaxMm + 2 * threadEngageMm);
+shelfDepthPipeCutMm =
+    (net_from_cut_mm(shelfDepthPipeCutCandidateMm) <= shelfDepthPipeNetMaxMm)
+        ? shelfDepthPipeCutCandidateMm
+        : (shelfDepthPipeCutCandidateMm - 10);
+
+assert(shelfDepthPipeCutMm >= 10 && shelfDepthPipeCutMm % 10 == 0,
+    str("shelfDepthPipeCutMm=", shelfDepthPipeCutMm, " 须为整厘米"));
+
+shelfDepthPipeNetMm = net_from_cut_mm(shelfDepthPipeCutMm);
+shelfDepthCentersMm = fitting_center_to_center_mm(shelfDepthPipeNetMm);
+shelfBoardDepthMarginMm = (shelfBoardDepthMm - shelfDepthCentersMm) / 2;
+
+assert(shelfBoardDepthMarginMm + 1e-6 >= shelfBoardDepthMarginMinMm,
+    str("层深取整后边距 ", shelfBoardDepthMarginMm,
+        " < 孔边距下限 ", shelfBoardDepthMarginMinMm));
 
 // 格内净深（柱间管内侧跨距，近似 = 层深管净长）
 shelfClearDepthMm = shelfDepthPipeNetMm;
@@ -117,3 +137,19 @@ shelfMidToRightPipeCutMm = cut_from_net_mm(shelfMidToRightPipeNetMm, "shelfM2R")
 
 lHorizNetMm = shelfLeftToMidMm;
 lHorizCutMm = shelfLeftToMidPipeCutMm;
+
+// =============================================================================
+// 左墙书架派生（上下层同长；中柱居中分跨）
+// =============================================================================
+
+shelfLeftBoardLeftX  = shelfLeftWallEndX + shelfLeftBoardWallGapMm;
+shelfLeftBoardRightX = shelfLeftBoardLeftX + shelfLeftBoardLenMm;
+
+shelfLeftLeftPostX  = shelfLeftBoardLeftX + shelfBoardSideMarginMm;
+shelfLeftRightPostX = shelfLeftBoardRightX - shelfBoardSideMarginMm;
+shelfLeftMidPostX   = (shelfLeftLeftPostX + shelfLeftRightPostX) / 2;
+
+shelfLeftPostSpanMm = shelfLeftRightPostX - shelfLeftLeftPostX;
+shelfLeftBayPipeNetMm = pipe_net_between_tees_mm(shelfLeftPostSpanMm / 2);
+shelfLeftBayPipeCutMm = cut_from_net_mm(shelfLeftBayPipeNetMm, "shelfLeftBay");
+

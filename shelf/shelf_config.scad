@@ -28,10 +28,10 @@ shelfClearHeightMm = 340;
 shelfLowerBoardLenMm = 1200;
 
 // 上层板外轮廓长（+X；右缘与下层板对齐）
-shelfUpperBoardLenMm = 800;
+shelfUpperBoardLenMm = 700;
 
 // 层板外轮廓深（前后，世界 −Y 方向外包）
-shelfBoardDepthMm = 360;
+shelfBoardDepthMm = 280;
 
 // 层板厚
 shelfThicknessMm = 12;
@@ -61,3 +61,16 @@ shelfPillarLeftX = 2270; // 2560 − 290
 
 // 下层板右缘与立柱左缘间距
 shelfBoardPillarGapMm = 10;
+
+// =============================================================================
+// 左墙书架（后墙左侧延申段；上下层同长 1200）
+// =============================================================================
+
+// 左墙延申段左端世界 X（须与 main 中 −wall_extend_left_mm 一致）
+shelfLeftWallEndX = -2000;
+
+// 左书架板左缘相对墙端内缩
+shelfLeftBoardWallGapMm = 10;
+
+// 左书架上下层板长（两层同 1200）
+shelfLeftBoardLenMm = 1200;

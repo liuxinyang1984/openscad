@@ -13,8 +13,8 @@ showBottomFlangePreview = false;
 showRightFrame = true;
 showLeftFrame = true;
 showDeskCross = true;
-showTabletop = false;
-showShelves = false;
+showTabletop = true;
+showShelves = true;
 
 module table_main() {
     if (showBottomFlangePreview)

@@ -22,9 +22,16 @@ module rf_pipe_y(length) {
 }
 
 // -----------------------------------------------------------------------------
-// 顶托：翻法兰 + 对丝（法兰承面 = frameHeight）
+// 顶托：仅翻法兰（立管外丝直接拧入；承面 = frameHeight）
 // -----------------------------------------------------------------------------
 
+module rf_top_flange_only() {
+    translate([0, 0, frameHeight])
+        rotate([0, 180, 0])
+            threaded_flange(flange_params);
+}
+
+// 旧：翻法兰 + 对丝（顶四通方案；保留备查）
 module rf_top_flange_coupling() {
     translate([0, 0, frameHeight])
         rotate([0, 180, 0])
@@ -38,14 +45,14 @@ module rf_top_flange_coupling() {
     }
 }
 
-// 垂挂直管：拉结三通上缘 → 顶平面四通下缘（净长 hangPipeNetMm）
+// 垂挂直管：拉结三通上缘 → 顶翻法兰盘底（与左柜同长 lfHangToFlangeNetMm）
 module rf_hang_pipe() {
     translate([0, 0, hangPipeStartZ])
-        rf_pipe_z(hangPipeNetMm);
+        rf_pipe_z(lfHangToFlangeNetMm);
 }
 
 // -----------------------------------------------------------------------------
-// 右缘立柱：上四通 → 单段衔接 → 顶四通 + 顶托
+// 右缘立柱：底/中四通 → 上段直通翻法兰（无顶四通/对丝）
 // -----------------------------------------------------------------------------
 
 module rf_corner_post_right(rot_z) {
@@ -71,19 +78,15 @@ module rf_corner_post_right(rot_z) {
         translate([0, 0, rfStemStartZ])
             rf_pipe_z(rfStemNetMm);
 
-        translate([0, 0, rf_z_top])
-            rotate([0, 0, rot_z])
-                fourway3d(pipe_params);
-
-        rf_top_flange_coupling();
+        rf_top_flange_only();
     }
 }
 
 // -----------------------------------------------------------------------------
-// 左缘立柱：垂挂 + 顶平面四通
+// 左缘立柱：底/中四通 → 垂挂三通 → 上段直通翻法兰（无顶平面四通/对丝）
 // -----------------------------------------------------------------------------
 
-module rf_corner_post_left(rot_z, hang_tee_rot_z = 0, top_rot_z = 90) {
+module rf_corner_post_left(rot_z, hang_tee_rot_z = 0) {
     mid_z = rf_z_lo + fittingHeadExtraMm;
     stem_below_z = rf_z_hi + fittingHeadExtraMm;
 
@@ -113,11 +116,7 @@ module rf_corner_post_left(rot_z, hang_tee_rot_z = 0, top_rot_z = 90) {
 
         rf_hang_pipe();
 
-        translate([0, 0, rf_z_top])
-            rotate([0, 0, top_rot_z])
-                fourway(pipe_params);
-
-        rf_top_flange_coupling();
+        rf_top_flange_only();
     }
 }
 
@@ -137,7 +136,7 @@ module rf_front_right_tee() {
 // 一层 XY：梯形 — 前缘三通分左右横管 + 右侧纵管；后缘短横管；可选左缘纵管
 // -----------------------------------------------------------------------------
 
-module rf_rail_layer_shifted(z, skip_left_y = false) {
+module rf_rail_layer_shifted(z, skip_left_y = false, skip_right_y = false, skip_front_right_x = false, skip_rear_x = false, skip_front_left_x = false) {
     sx = rightFrameShiftX;
     w = rightFrameWidth;
     d = rightFrameDepth;
@@ -148,16 +147,19 @@ module rf_rail_layer_shifted(z, skip_left_y = false) {
         rf_front_right_tee();
 
     // 前缘左段：左前柱 → 三通
-    translate([sx + hx, 0, z])
-        rf_pipe_x(rfSpanXFrontLeftNetMm);
+    if (!skip_front_left_x)
+        translate([sx + hx, 0, z])
+            rf_pipe_x(rfSpanXFrontLeftNetMm);
 
     // 前缘右段：三通 → 右前柱
-    translate([w + hx, 0, z])
-        rf_pipe_x(rfSpanXFrontRightNetMm);
+    if (!skip_front_right_x)
+        translate([w + hx, 0, z])
+            rf_pipe_x(rfSpanXFrontRightNetMm);
 
     // 后缘：左后柱 → 右后柱（右后不右移，跨距缩短）
-    translate([sx + hx, d, z])
-        rf_pipe_x(rfSpanXRearNetMm);
+    if (!skip_rear_x)
+        translate([sx + hx, d, z])
+            rf_pipe_x(rfSpanXRearNetMm);
 
     // 左侧纵管（顶层跳过，垂挂层另做）
     if (!skip_left_y)
@@ -165,8 +167,9 @@ module rf_rail_layer_shifted(z, skip_left_y = false) {
             rf_pipe_y(rfSpanYNetMm);
 
     // 右侧纵管：三通 → 右后柱（仍在 x=w）
-    translate([w, hx, z])
-        rf_pipe_y(rfSpanYNetMm);
+    if (!skip_right_y)
+        translate([w, hx, z])
+            rf_pipe_y(rfSpanYNetMm);
 }
 
 // -----------------------------------------------------------------------------
@@ -202,31 +205,35 @@ module table_right_frame() {
 
     // 左前 / 右前（右移）；左后（右移）；右后（不移）
     translate([sx, 0, 0])
-        rf_corner_post_left(180, 0, 90);
+        rf_corner_post_left(180, 0);
     translate([w + sx, 0, 0])
         rf_corner_post_right(-90);
     translate([sx, d, 0])
         rotate([0, 0, 180])
-            rf_corner_post_left(-90, 0, 90);
+            rf_corner_post_left(-90, 0);
     translate([w, d, 0])
         rotate([0, 0, 180])
             rf_corner_post_right(180);
 
-    rf_rail_layer_shifted(rf_z_lo);
-    rf_rail_layer_shifted(rf_z_hi);
-    rf_rail_layer_shifted(rf_z_top, skip_left_y = true);
+    // 底圈：左右缘纵管均去掉（仅留前后横管开口）
+    rf_rail_layer_shifted(rf_z_lo, skip_left_y = true, skip_right_y = true);
+    // 中圈 / 顶圈：横纵管均去掉（上层板承在 rf_z_hi 立体四通 + 开孔）
+    // rf_rail_layer_shifted(rf_z_hi, ...);
+    // rf_rail_layer_shifted(rf_z_top, ...);
 
     rf_left_edge_depth_tie();
 
     e = fittingHeadExtraMm;
     assert(rfMidPipeNetMm > 0 && abs(rfMidPipeNetMm - (rf_z_hi - rf_z_lo - 2 * e)) < 0.01,
         "中立管搭接异常");
-    assert(rfStemNetMm > 0 && abs(rfStemNetMm - (rf_z_top - rf_z_hi - 2 * e)) < 0.01,
-        "右缘上衔接搭接异常");
+    assert(rfStemNetMm > 0
+        && abs(rfStemNetMm - (frameHeight - flangeThicknessMm - rfStemStartZ)) < 0.01,
+        "右缘上段→法兰搭接异常");
     assert(rfStemBelowTieNetMm > 0 && abs(rfStemBelowTieNetMm - (crossTieZ - rf_z_hi - 2 * e)) < 0.01,
         "左缘垂挂竖管搭接异常");
-    assert(hangPipeNetMm > 0 && abs(hangPipeNetMm - (rf_z_top - crossTieZ - 2 * e)) < 0.01,
-        "垂挂连接管搭接异常");
+    assert(lfHangToFlangeNetMm > 0
+        && abs(lfHangToFlangeNetMm - (frameHeight - flangeThicknessMm - hangPipeStartZ)) < 0.01,
+        "左缘垂挂→法兰搭接异常");
     assert(rfSpanXFrontLeftNetMm > 0
         && abs(rfSpanXFrontLeftNetMm - (rightFrameWidth - rightFrameShiftX - 2 * e)) < 0.01,
         "前缘左段横拉搭接异常");

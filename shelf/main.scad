@@ -8,120 +8,68 @@
 // 法兰承面贴墙（shelfOriginY）；管件沿 −Y 依次伸出
 
 include <standards.scad>
+
+// 显示开关：右书架 / 左墙书架 / 层板
+showShelf = true;
+showShelfLeft = true;
+showShelfBoards = true;
+
 include <boards.scad>
 
-// 显示开关：书架整体 / 层板
-showShelf = false;
-showShelfBoards = false;
-
 // -----------------------------------------------------------------------------
-// 底部侧框架（YZ 平面一格）
-// 墙面法兰 → 对丝 → 下前后五通 + 下层深管 → 立管 → 上前后五通 + 上层深管
-// 上层侧框架复用时不带「下层深管」与墙锚（另模块再写）
-// 局部：原点 = 法兰承面中心
+// 侧框架基准：最右侧组件（各柱共用）
+// 下端堵头 → 立管 → 上前后接头 + 层深管 → 上墙锚
 // -----------------------------------------------------------------------------
 flangeT   = flangeThicknessMm;      // 法兰盘厚度
 couplingL = couplingTotalMm;        // 对丝全长
 extra     = fittingHeadExtraMm;     // 中心 → 管端外缘
-depthNet  = shelfDepthPipeNetMm;    // 层深直管净长（上下层同）
+depthNet  = shelfDepthPipeNetMm;    // 层深直管净长
 vertNet   = shelfVerticalPipeNetMm; // 立管净长
 stubNet   = shelfStubPipeNetMm;     // 端柱短管净长
 
-// 后/前下接头、上接头（与 standards 派生一致）
 backLowerFiveZ   = shelfBackFittingLocalZ;
 frontLowerFiveZ  = shelfFrontFittingLocalZ;
 upperFiveY       = shelfUpperFittingLocalY;
-lowerDepthStartZ = backLowerFiveZ - extra;
 upperDepthStartZ = backLowerFiveZ - extra;
 
-module base(){
-    // 基础框架
-    union() {
-        // --- 墙锚 ---
-        threaded_flange(flange_params);
-
-        translate([0, 0, -(flangeT + couplingL / 2)])
-            pipe_link(pipe_params, couplingL, couplingHexMm);
-
-        // --- 下层：后五通 + 层深管 + 前五通 ---
-        translate([0, 0, backLowerFiveZ])
-            tee(pipe_params);
-        translate([0, 0, frontLowerFiveZ])
-            elbow(pipe_params);
-    }
-}
-
-module left_side(){
-    base();
-    translate([0,0,upperDepthStartZ - depthNet])
-        pipe(pipe_params, depthNet);
-    // 前短管 + 堵头
-    translate([0, -fittingHalfHeadMm, frontLowerFiveZ])
-        rotate([90, 0, 0])
-            pipe(pipe_params, stubNet);
-    translate([0, -fittingHalfHeadMm - stubNet, frontLowerFiveZ])
-        rotate([90, 0, 0])
-            cap(pipe_params);
-    // 后短管 + 堵头
+// 侧框架一柱
+module shelf_side_frame() {
+    // 后下堵头
     translate([0, -fittingHalfHeadMm, backLowerFiveZ])
+        rotate([270, 90, 0])
+            cap(pipe_params);
+    // 前下堵头
+    translate([0, -fittingHalfHeadMm, frontLowerFiveZ])
+        rotate([270, 90, 0])
+            cap(pipe_params);
+
+    // 后立管
+    translate([0, -extra, backLowerFiveZ])
         rotate([90, 0, 0])
-            pipe(pipe_params, stubNet);
-    translate([0, -fittingHalfHeadMm - stubNet, backLowerFiveZ])
+            pipe(pipe_params, vertNet);
+    // 前立管
+    translate([0, -extra, frontLowerFiveZ])
         rotate([90, 0, 0])
-            cap(pipe_params);
-}
-module right_side(){
-
-    // 后下接头
-    translate([0, - fittingHalfHeadMm, backLowerFiveZ]){
-        rotate([270,90,0]){
-            cap(pipe_params);
-        }
-    }
-    // 前下接头
-    translate([0,  - fittingHalfHeadMm, frontLowerFiveZ]){
-        rotate([270,90,0]){
-            cap(pipe_params);
-        }
-    }
-
-    // 后下管
-    translate([0, -extra, backLowerFiveZ]){
-        rotate([90, 0, 0]){
             pipe(pipe_params, vertNet);
-        }
-    }
-    // 前下管
-    translate([0, -extra, frontLowerFiveZ]){
-        rotate([90, 0, 0]){
-            pipe(pipe_params, vertNet);
-        }
-    }
 
-    //后上接头
-    translate([0, upperFiveY, backLowerFiveZ]){
+    // 后上四通
+    translate([0, upperFiveY, backLowerFiveZ])
         fourway(pipe_params);
-    }
-
-    // 前上接头
-    translate([0, upperFiveY, frontLowerFiveZ]){
-        rotate([-90,0,0]){
+    // 前上三通：支口朝墙（局部 +Z / 向里），接层深管
+    translate([0, upperFiveY, frontLowerFiveZ])
+        rotate([90, 0, 0])
             tee(pipe_params);
-        }
-    }
-    // 上纵管
-    translate([0, upperFiveY, upperDepthStartZ - depthNet]){
+    // 上层深管
+    translate([0, upperFiveY, upperDepthStartZ - depthNet])
         pipe(pipe_params, depthNet);
-    }
-    // 上部锚点
-    translate([0,upperFiveY,0]){
-        union (){
-        threaded_flange(flange_params);
 
+    // 上墙锚：法兰 + 对丝
+    translate([0, upperFiveY, 0]) {
+        threaded_flange(flange_params);
         translate([0, 0, -(flangeT + couplingL / 2)])
             pipe_link(pipe_params, couplingL, couplingHexMm);
-        }
     }
+
     // 后上短管 + 堵头
     translate([0, -extra - vertNet - fittingHalfHeadMm, backLowerFiveZ])
         rotate([90, 0, 0])
@@ -137,18 +85,23 @@ module right_side(){
         rotate([90, 0, 0])
             cap(pipe_params);
 }
+
+module shelf_side_frames_at(post_xs) {
+    for (px = post_xs)
+        translate([px, shelfOriginY, shelfFrameOriginZ])
+            rotate([-90, 0, 0])
+                shelf_side_frame();
+}
+
 module shelf_bottom_side_frame() {
-    translate([shelfLeftPostX, shelfOriginY, shelfFrameOriginZ])
-        rotate([-90, 0, 0])
-            left_side();
+    shelf_side_frames_at([shelfLeftPostX, shelfMidPostX, shelfRightPostX]);
+}
 
-    translate([shelfMidPostX, shelfOriginY, shelfFrameOriginZ])
-        rotate([-90, 0, 0])
-            right_side();
-
-    translate([shelfRightPostX, shelfOriginY, shelfFrameOriginZ])
-        rotate([-90, 0, 0])
-            right_side();
+module shelf_left_side_frame() {
+    // 左墙两层 1200：左 / 中 / 右三柱（中柱居中）
+    shelf_side_frames_at([
+        shelfLeftLeftPostX, shelfLeftMidPostX, shelfLeftRightPostX
+    ]);
 }
 
 // -----------------------------------------------------------------------------
@@ -158,6 +111,8 @@ module shelf_bottom_side_frame() {
 module shelf_main() {
     if (showShelf)
         shelf_bottom_side_frame();
+    if (showShelfLeft)
+        shelf_left_side_frame();
     if (showShelfBoards)
         shelf_boards();
 }

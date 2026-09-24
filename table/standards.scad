@@ -54,12 +54,12 @@ rfSpanXFrontLeftNetMm = pipe_net_between_tees_mm(rightFrameWidth - rightFrameShi
 rfSpanXFrontRightNetMm = pipe_net_between_tees_mm(rightFrameShiftX);
 rfSpanXRearNetMm = pipe_net_between_tees_mm(rightFrameWidth - rightFrameShiftX);
 
-// 顶四通中心：桌面底向下 = 法兰盘厚 + 对丝全长 + 外缘搭接
+// 顶四通中心（虚拟基准）：仍用于反算 crossTieZ；右柜顶已改为立管直通法兰
 rf_z_top = frameHeight - flangeThicknessMm - couplingTotalMm - fittingHeadExtraMm;
 
-// 上半衔接管：下框上四通顶侧 → 顶四通底侧
+// 右缘上段：中圈四通上缘 → 顶翻法兰盘底（直通法兰，无顶四通/对丝）
 rfStemStartZ = rightBottomFrameHeight + fittingHeadExtraMm;
-rfStemNetMm = rf_z_top - rfStemStartZ - fittingHeadExtraMm;
+rfStemNetMm = frameHeight - flangeThicknessMm - rfStemStartZ;
 
 // 建议下料（xx0，供 BOM；模型几何用上面净长以保住标高）
 rfMidPipeCutMm = cut_from_net_mm(rfMidPipeNetMm, "rfMidPipeCutMm");
@@ -101,17 +101,24 @@ hangPipeCutMm = cut_from_net_mm(hangPipeNetMm, "hangPipeCutMm");
 leftFrameDepth = frameWidth;
 
 lf_z_lo = rf_z_lo;       // 左框下四通中心 Z（与右框同脚堆叠）
-lf_z_top = rf_z_top;    // 左框顶管件中心 Z（与右框同顶托）
+lf_z_top = rf_z_top;    // 右缘顶平面四通中心 Z（与右框同；左缘顶已无四通）
 
 lfSpanXNetMm = pipe_net_between_tees_mm(leftFrameWidth);
 lfSpanYNetMm = pipe_net_between_tees_mm(leftFrameDepth);
 
-// 左缘（外侧）立柱：底四通上缘 → 顶四通下缘（单段）
+// 左缘（外侧）立柱：与右缘同高分段（便于下料同长）
+// 下段 / 上段净长共用 lfStemBelowTieNetMm、lfHangToFlangeNetMm
 lfStemStartZ = lf_z_lo + fittingHeadExtraMm;
-lfStemNetMm = lf_z_top - lfStemStartZ - fittingHeadExtraMm;
+// 旧连续立管长（已不用；保留公式备查）
+lfStemNetMm = frameHeight - flangeThicknessMm - lfStemStartZ;
+lfStemEndZ = lfStemStartZ + lfStemNetMm;
 
-// 右缘垂挂立柱：底四通上缘 → 拉结三通下缘（标高与右框 crossTieZ 对齐）
+// 右缘垂挂立柱：底三通上缘 → 拉结三通下缘（标高与右框 crossTieZ 对齐）
 lfStemBelowTieNetMm = crossTieZ - lf_z_lo - 2 * fittingHeadExtraMm;
+
+// 右缘垂挂上段：拉结三通上缘 → 顶翻法兰盘底（无顶四通/对丝；与左缘同承面）
+lfHangToFlangeNetMm = frameHeight - flangeThicknessMm - hangPipeStartZ;
+lfHangToFlangeCutMm = cut_from_net_mm(lfHangToFlangeNetMm, "lfHangToFlangeCutMm");
 
 // 右缘深向半跨（与右框左缘同公式；深向 = frameWidth）
 lfEdgeHalfNetMm = pipe_net_between_tees_mm(leftFrameDepth / 2);
@@ -152,6 +159,10 @@ deskCrossMidX = (deskCrossLeftX + deskCrossRightX) / 2;
 deskCrossHalfNetMm = pipe_net_between_tees_mm(deskCrossCenterMm / 2);
 deskCrossHalfCutMm = cut_from_net_mm(deskCrossHalfNetMm, "deskCrossHalfCutMm");
 
-// 中位三通支口上缘 → 翻法兰承面（frameHeight = 桌面底；与角柱顶托同约定）
+// 顶层中托支口（若恢复前/后顶管）：三通外缘 → 桌底法兰
 deskCrossBranchStemNetMm = frameHeight - rf_z_top - fittingHeadExtraMm;
 deskCrossBranchStemCutMm = cut_from_net_mm(deskCrossBranchStemNetMm, "deskCrossBranchStemCutMm");
+
+// 垂挂层中托支口：crossTieZ 中三通外缘 → 桌底翻法兰（托中间对接横杆）
+deskCrossMidBranchStemNetMm = frameHeight - crossTieZ - fittingHeadExtraMm;
+deskCrossMidBranchStemCutMm = cut_from_net_mm(deskCrossMidBranchStemNetMm, "deskCrossMidBranchStemCutMm");
