@@ -10,9 +10,9 @@
 
 shelfEdgeOverhangMm = 10;
 
-function shelf_fitting_od() = pipe + 2 * (pipe * 0.1);
+function shelf_fitting_od() = pipeOD + 2 * (pipeOD * 0.1);
 function shelf_post_cut_d() = shelf_fitting_od() + 5;
-function shelf_outline_outset() = pipe / 2 + shelfEdgeOverhangMm;
+function shelf_outline_outset() = pipeOD / 2 + shelfEdgeOverhangMm;
 
 // 右框板右后切洞：X = 右移量；Y 与桌板洞口前缘对齐
 function shelf_rf_cut_x() = rightFrameShiftX;
@@ -82,7 +82,7 @@ module shelf_board_right_rect() {
 }
 
 module table_shelves() {
-    z_on_rail = pipe / 2;
+    z_on_rail = pipeOD / 2;
     col = [0.62, 0.45, 0.28, 0.65];
     sx = rightFrameShiftX;
 

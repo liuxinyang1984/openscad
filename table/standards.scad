@@ -1,56 +1,22 @@
-// table/standards.scad — 管件标准、商家搭接尺寸、下料 / 标高计算
+// table/standards.scad — 桌项目派生尺寸（管件标准 / 套丝 / 下料函数见 common/standards）
 //
-// 依赖：须先 include <table_config.scad>（手填与派生主尺寸）
-// 本文件不放「设计手填量」；legHeight 等由主参数 + 标准件算出
+// 依赖：须先 include <table_config.scad>（桌手填主参数）
+// 本文件只放桌专属派生：legHeight、各框标高、对接横管等
 
-include <../config.scad>
-include <../utils.scad>
+include <../common/standards.scad>
 
-standard = "DN15";
-flange_params = get_threaded_flange_params(standard);
-pipe_params = get_pipe_params(standard);
-
-pipe = pipe_params[1];
-pipeThreadMm = pipe_params[3];
-flangeThicknessMm = flange_params[4];
-flangeThreadLengthMm = flange_params[6];
-flangeOD = flange_params[1];
-
+// 桌板边到柱心预留 须 ≥ 法兰半径，否则法兰探出桌板
 assert(frameInset >= flangeOD / 2,
-    str("frameInset=", frameInset, " 须 ≥ 法兰半径 ", flangeOD / 2, "，否则法兰探出桌板"));
+    str("frameInset=", frameInset, " 须 ≥ 法兰半径 ", flangeOD / 2));
 
-couplingTotalMm = 40;
-couplingHexMm = 10;
+// =============================================================================
+// 桌脚堆叠（落地法兰 + 脚短管 + 下四通）
+// =============================================================================
 
-fittingMainRunMm = 52;
-fittingHalfHeadMm = 26;
-fittingThreadEngageMm = 10;
-fittingHeadExtraMm = fittingHalfHeadMm - fittingThreadEngageMm;
-
-function cut_round_xx0(mm) = ceil(mm / 10) * 10;
-
-function cut_must_xx0(cut_mm, name = "cut") =
-    assert(cut_mm % 10 == 0, str(name, " 下料须为整厘米 xx0 mm"))
-    cut_mm;
-
-function cut_from_net_mm(net_mm, name = "cut") =
-    cut_must_xx0(cut_round_xx0(net_mm + 2 * pipeThreadMm), name);
-
-function net_from_cut_mm(cut_mm) = cut_mm - 2 * pipeThreadMm;
-
-function fitting_center_to_center_mm(pipe_net_mm) =
-    pipe_net_mm + 2 * fittingHeadExtraMm;
-
-function pipe_span_half_net_mm(center_half_mm) =
-    // 仅一端有管件、另一端为几何中点时用；两端皆为管件请用 pipe_net_between_tees_mm
-    center_half_mm - fittingHeadExtraMm;
-
-function pipe_net_between_tees_mm(center_mm) =
-    center_mm - 2 * fittingHeadExtraMm;
-
-// 桌脚：落地法兰盘顶 + 脚短管净长 + 拧入余量 + 三通上半头（至主通 +Z 外端）
+// 脚短管净长：下料 footPipeCutMm − 两端成品螺纹段
 footPipeNetMm = net_from_cut_mm(cut_must_xx0(footPipeCutMm, "footPipeCutMm"));
 
+// 脚堆叠顶高 = 法兰厚 + 脚管净长 + 外缘搭接 + 半头
 function foot_stack_top_z(
     flange_t = flangeThicknessMm,
     foot_net = footPipeNetMm,
@@ -58,6 +24,7 @@ function foot_stack_top_z(
     half_head = fittingHalfHeadMm
 ) = flange_t + foot_net + conn + half_head;
 
+// 腿高（地面 → 下四通上缘半头外端）
 legHeight = foot_stack_top_z();
 
 // =============================================================================
@@ -67,15 +34,16 @@ legHeight = foot_stack_top_z();
 // 前后柱心距（沿 +Y）= 整桌框架深向可用宽
 rightFrameDepth = frameWidth;
 
-// 下四通中心 Z：法兰盘顶 + 脚管净长 + 拧入余量
+// 下四通中心 Z：法兰盘顶 + 脚管净长 + 外缘搭接
 rf_z_lo = flangeThicknessMm + footPipeNetMm + fittingHeadExtraMm;
 
 // 下框上四通中心 Z（设计手填）
 rf_z_hi = rightBottomFrameHeight;
 
-// 下半中立管净长：下四通中心 ↔ 上四通中心，两端均停在管件搭接外缘（非外径/中心）
+// 下半中立管净长：下四通中心 ↔ 上四通中心，两端均停在管件搭接外缘
 rfMidPipeNetMm = rf_z_hi - rf_z_lo - 2 * fittingHeadExtraMm;
 
+// X / Y 横拉净长（柱心距 − 两端外缘搭接）
 rfSpanXNetMm = pipe_net_between_tees_mm(rightFrameWidth);
 rfSpanYNetMm = pipe_net_between_tees_mm(rightFrameDepth);
 
@@ -86,7 +54,7 @@ rfSpanXFrontLeftNetMm = pipe_net_between_tees_mm(rightFrameWidth - rightFrameShi
 rfSpanXFrontRightNetMm = pipe_net_between_tees_mm(rightFrameShiftX);
 rfSpanXRearNetMm = pipe_net_between_tees_mm(rightFrameWidth - rightFrameShiftX);
 
-// 顶四通中心：桌面底向下 = 法兰盘厚 + 对丝全长 + 拧入余量
+// 顶四通中心：桌面底向下 = 法兰盘厚 + 对丝全长 + 外缘搭接
 rf_z_top = frameHeight - flangeThicknessMm - couplingTotalMm - fittingHeadExtraMm;
 
 // 上半衔接管：下框上四通顶侧 → 顶四通底侧
@@ -120,7 +88,7 @@ hangPipeStartZ = crossTieZ + fittingHeadExtraMm;
 rfStemBelowTieNetMm = crossTieZ - rf_z_hi - 2 * fittingHeadExtraMm;
 
 // 左缘深向半跨（前三通↔中位三通、中位↔后三通）
-// 两端都有三通：净长 = 半中心距 − 2×搭接（管子停在管件外缘，不到中心）
+// 两端都有三通：净长 = 半中心距 − 2×外缘搭接
 rfEdgeHalfNetMm = pipe_net_between_tees_mm(rightFrameDepth / 2);
 rfEdgeHalfCutMm = cut_from_net_mm(rfEdgeHalfNetMm, "rfEdgeHalfCutMm");
 rfStemBelowTieCutMm = cut_from_net_mm(rfStemBelowTieNetMm, "rfStemBelowTieCutMm");
@@ -132,8 +100,8 @@ hangPipeCutMm = cut_from_net_mm(hangPipeNetMm, "hangPipeCutMm");
 
 leftFrameDepth = frameWidth;
 
-lf_z_lo = rf_z_lo;
-lf_z_top = rf_z_top;
+lf_z_lo = rf_z_lo;       // 左框下四通中心 Z（与右框同脚堆叠）
+lf_z_top = rf_z_top;    // 左框顶管件中心 Z（与右框同顶托）
 
 lfSpanXNetMm = pipe_net_between_tees_mm(leftFrameWidth);
 lfSpanYNetMm = pipe_net_between_tees_mm(leftFrameDepth);
@@ -166,7 +134,7 @@ leftFrameOriginY = frameInset;
 deskCrossLeftX = leftFrameOriginX + leftFrameWidth;
 deskCrossRightX = rightFrameOriginX + rightFrameShiftX;
 
-// 柱心距 − 两端搭接外缘（整根；中位无三通时用）
+// 柱心距 − 两端外缘搭接（整根；中位无三通时用）
 deskCrossCenterMm = deskCrossRightX - deskCrossLeftX;
 deskCrossNetMm = pipe_net_between_tees_mm(deskCrossCenterMm);
 deskCrossCutMm = cut_from_net_mm(deskCrossNetMm, "deskCrossCutMm");

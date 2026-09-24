@@ -3,6 +3,9 @@
 include <lib/pipe.scad>
 include <lib/tee.scad>
 include <lib/tee3d.scad>
+include <lib/socket.scad>
+include <lib/elbow.scad>
+include <lib/cap.scad>
 include <lib/fourway.scad>
 include <lib/fourway3d.scad>
 include <lib/fiveway3d.scad>
